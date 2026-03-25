@@ -7,30 +7,48 @@ export function useTenant() {
   const [user, setUser] = useState(null)
 
   useEffect(() => {
-    loadTenant()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user)
+        loadTenant(session)
+      } else {
+        setLoading(false)
+      }
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session?.user) {
+        setUser(session.user)
+        loadTenant(session)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  async function loadTenant() {
+  async function loadTenant(session) {
     setLoading(true)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { setLoading(false); return }
-      setUser(session.user)
-
-      const { data: membership } = await supabase
+      const { data: membership, error: memberErr } = await supabase
         .from('tenant_members')
         .select('tenant_id, role')
         .eq('user_id', session.user.id)
         .single()
 
-      if (!membership?.tenant_id) { setLoading(false); return }
+      console.log('membership:', membership, 'error:', memberErr)
 
-      const { data: tenantData } = await supabase
+      if (!membership?.tenant_id) {
+        setLoading(false)
+        return
+      }
+
+      const { data: tenantData, error: tenantErr } = await supabase
         .from('tenants')
         .select('*')
         .eq('id', membership.tenant_id)
         .single()
 
+      console.log('tenant:', tenantData, 'error:', tenantErr)
       setTenant({ ...tenantData, role: membership.role })
     } catch (err) {
       console.error('useTenant error:', err)
@@ -38,5 +56,5 @@ export function useTenant() {
     setLoading(false)
   }
 
-  return { tenant, user, loading, reload: loadTenant }
+  return { tenant, user, loading, reload: () => supabase.auth.getSession().then(({ data: { session } }) => loadTenant(session)) }
 }

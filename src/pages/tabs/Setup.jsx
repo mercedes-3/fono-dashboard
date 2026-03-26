@@ -63,7 +63,6 @@ export default function Setup({ tenant, reload }) {
         business_type: bizType,
         dispatch_phone: dispatchPhone,
         ai_system_prompt: aiPrompt,
-        updated_at: new Date().toISOString(),
       })
       .eq('id', tenant.id)
 

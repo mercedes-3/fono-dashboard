@@ -23,6 +23,7 @@ const NAV = [
 export default function Dashboard() {
   const navigate = useNavigate()
   const { tenant, user, loading, reload } = useTenant()
+  const { notifications, dismiss } = useRealtimeNotifications(tenant?.id)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const handleSignOut = async () => {
@@ -166,6 +167,7 @@ export default function Dashboard() {
           <Route path="settings" element={<Settings tenant={tenant} user={user} reload={reload} />} />
         </Routes>
       </main>
+      <NotificationToast notifications={notifications} onDismiss={dismiss} />
     </div>
   )
 }

@@ -144,9 +144,9 @@ export default function Pricing() {
                 </div>
                 <span style={{ fontSize: 11, color: 'var(--text-4)', lineHeight: 1.7 }}>
                   By completing this purchase, I agree to the{' '}
-                  <span style={{ color: 'var(--platinum-3)', textDecoration: 'underline', cursor: 'pointer' }}>Terms of Service</span>
-                  {' '}and{' '}
-                  <span style={{ color: 'var(--platinum-3)', textDecoration: 'underline', cursor: 'pointer' }}>Refund Policy</span>.
+                  <Link to="/terms" style={{ color: 'var(--platinum-3)', textDecoration: 'underline' }}>Terms of Service</Link>
+{' '}and{' '}
+<Link to="/refund" style={{ color: 'var(--platinum-3)', textDecoration: 'underline' }}>Refund Policy</Link>
                   I acknowledge that the $3,500 setup fee is non-refundable once onboarding and system configuration begin.
                 </span>
               </label>

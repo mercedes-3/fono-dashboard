@@ -1,85 +1,95 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { formatDistanceToNow, format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 
-const STATUS_COLORS = {
-  pending: 'badge-yellow',
-  confirmed: 'badge-green',
-  declined: 'badge-red',
-  completed: 'badge-blue',
-  cancelled: 'badge-gray',
+function PageTitle({ title, sub, action }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28 }}>
+      <div>
+        <div style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Fono</div>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 300, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1 }}>{title}</h1>
+        {sub && <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 8, letterSpacing: '0.02em' }}>{sub}</p>}
+      </div>
+      {action}
+    </div>
+  )
 }
 
-function ConfirmModal({ appt, onClose, onAction }) {
+function Pill({ label, active, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: '4px 14px', borderRadius: 99, fontSize: 10, fontWeight: 500,
+      letterSpacing: '0.06em', textTransform: 'uppercase',
+      background: active ? 'rgba(232,232,232,0.08)' : 'transparent',
+      color: active ? 'var(--platinum-2)' : 'var(--text-4)',
+      border: `1px solid ${active ? 'rgba(232,232,232,0.16)' : 'var(--border)'}`,
+      cursor: 'pointer', transition: 'all 0.12s',
+    }}>{label}</button>
+  )
+}
+
+const STATUS_STYLES = {
+  pending:   { bg: 'var(--amber-dim)', color: 'var(--amber)', border: 'rgba(251,191,36,0.15)' },
+  confirmed: { bg: 'var(--green-dim)', color: 'var(--green)', border: 'rgba(74,222,128,0.15)' },
+  declined:  { bg: 'var(--red-dim)',   color: 'var(--red)',   border: 'rgba(248,113,113,0.15)' },
+  completed: { bg: 'var(--blue-dim)',  color: 'var(--blue)',  border: 'rgba(96,165,250,0.15)' },
+  cancelled: { bg: 'var(--black-5)',   color: 'var(--text-4)', border: 'var(--border)' },
+}
+
+function StatusTag({ status }) {
+  const s = STATUS_STYLES[status] || STATUS_STYLES.pending
+  return (
+    <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 99, background: s.bg, color: s.color, border: `1px solid ${s.border}`, whiteSpace: 'nowrap' }}>
+      {status || 'pending'}
+    </span>
+  )
+}
+
+function Modal({ appt, onClose, onAction }) {
   const [loading, setLoading] = useState(false)
 
-  const handle = async (action) => {
+  const handle = async (status) => {
     setLoading(true)
-    await onAction(appt.id, action)
+    await onAction(appt.id, status)
     setLoading(false)
     onClose()
   }
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 999,
-      background: 'rgba(0,0,0,0.7)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 24,
-    }} onClick={onClose}>
-      <div className="card fade-in" style={{ width: '100%', maxWidth: 440 }} onClick={e => e.stopPropagation()}>
-        <div style={{ marginBottom: 20 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Appointment Request</h3>
-          <p style={{ fontSize: 12, color: 'var(--text-3)' }}>Review and respond to this request</p>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 420, background: 'var(--black-3)', border: '1px solid var(--border-2)', borderRadius: 14, padding: 28 }}>
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Appointment Request</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 300, color: 'var(--text)' }}>{appt.customer_name || 'Unknown Customer'}</div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
-          {[
-            ['Customer', appt.customer_name],
-            ['Phone', appt.customer_phone?.startsWith('web_') ? 'Web chat' : appt.customer_phone],
-            ['Service', appt.service_type],
-            ['Address', appt.service_address],
-            ['Preferred Time', appt.preferred_time_text],
-            ['Issue', appt.issue_summary],
-          ].map(([label, value]) => (
-            <div key={label} style={{ display: 'flex', gap: 12 }}>
-              <span style={{ fontSize: 12, color: 'var(--text-3)', width: 100, flexShrink: 0, fontWeight: 500 }}>{label}</span>
-              <span style={{ fontSize: 13, color: value ? 'var(--text)' : 'var(--text-3)' }}>{value || '—'}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+          {[['Phone', appt.customer_phone?.startsWith('web_') ? 'Web chat' : appt.customer_phone], ['Service', appt.service_type], ['Address', appt.service_address], ['Issue', appt.issue_summary]].map(([label, value]) => (
+            <div key={label} style={{ display: 'flex', gap: 14 }}>
+              <span style={{ fontSize: 9, color: 'var(--text-4)', width: 72, flexShrink: 0, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', paddingTop: 1 }}>{label}</span>
+              <span style={{ fontSize: 12, color: value ? 'var(--text)' : 'var(--text-4)', lineHeight: 1.5 }}>{value || '—'}</span>
             </div>
           ))}
         </div>
 
-        <div style={{ padding: '12px', background: 'var(--bg-3)', borderRadius: 8, marginBottom: 20 }}>
-          <p style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 4, fontWeight: 500 }}>REQUESTED</p>
-          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--accent-2)' }}>{appt.preferred_time_text || 'No time specified'}</p>
+        <div style={{ padding: '14px 16px', background: 'var(--black-4)', borderRadius: 8, marginBottom: 22, border: '1px solid var(--border)' }}>
+          <div style={{ fontSize: 9, color: 'var(--text-4)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Requested Time</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 300, color: 'var(--platinum)' }}>{appt.preferred_time_text || 'Not specified'}</div>
         </div>
 
-        {appt.status === 'pending' ? (
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              className="btn btn-danger"
-              style={{ flex: 1 }}
-              onClick={() => handle('declined')}
-              disabled={loading}
-            >
-              {loading ? <span className="spinner" /> : '✕'} Decline
-            </button>
-            <button
-              className="btn btn-primary"
-              style={{ flex: 1, background: 'var(--green)', }}
-              onClick={() => handle('confirmed')}
-              disabled={loading}
-            >
-              {loading ? <span className="spinner" /> : '✓'} Confirm
-            </button>
-          </div>
-        ) : (
-          <div style={{ textAlign: 'center' }}>
-            <span className={`badge ${STATUS_COLORS[appt.status]}`} style={{ fontSize: 13, padding: '6px 16px' }}>
-              {appt.status}
-            </span>
-          </div>
-        )}
+        {appt.status === 'pending'
+          ? (
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => handle('declined')} disabled={loading} style={{ flex: 1, padding: '9px', borderRadius: 8, fontSize: 11, fontWeight: 500, background: 'var(--red-dim)', color: 'var(--red)', border: '1px solid rgba(248,113,113,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                {loading ? <span className="spinner" /> : null} Decline
+              </button>
+              <button onClick={() => handle('confirmed')} disabled={loading} style={{ flex: 1, padding: '9px', borderRadius: 8, fontSize: 11, fontWeight: 500, background: 'var(--green-dim)', color: 'var(--green)', border: '1px solid rgba(74,222,128,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                {loading ? <span className="spinner" /> : null} Confirm
+              </button>
+            </div>
+          )
+          : <div style={{ textAlign: 'center' }}><StatusTag status={appt.status} /></div>
+        }
       </div>
     </div>
   )
@@ -90,195 +100,107 @@ export default function Appointments({ tenant }) {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [filter, setFilter] = useState('all')
-  const [actionMsg, setActionMsg] = useState('')
+  const [msg, setMsg] = useState('')
 
-  useEffect(() => {
-    if (tenant?.id) loadAppts()
-  }, [tenant])
+  useEffect(() => { if (tenant?.id) load() }, [tenant])
 
-  async function loadAppts() {
+  async function load() {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('appointment_requests')
-      .select('*')
-      .eq('tenant_id', tenant.id)
-      .order('created_at', { ascending: false })
+    const { data } = await supabase.from('appointment_requests').select('*').eq('tenant_id', tenant.id).order('created_at', { ascending: false })
     setAppts(data || [])
     setLoading(false)
   }
 
-  async function handleAction(apptId, newStatus) {
-    const { error } = await supabase
-      .from('appointment_requests')
-      .update({ status: newStatus })
-      .eq('id', apptId)
-
-    if (error) {
-      setActionMsg(`❌ Failed: ${error.message}`)
-    } else {
-      setActionMsg(`✅ Appointment ${newStatus}!`)
-      setTimeout(() => setActionMsg(''), 3000)
-      loadAppts()
-    }
+  async function handleAction(id, status) {
+    const { error } = await supabase.from('appointment_requests').update({ status }).eq('id', id)
+    if (error) { setMsg(`❌ ${error.message}`) }
+    else { setMsg(`✅ Appointment ${status}`); setTimeout(() => setMsg(''), 3000); load() }
   }
 
-  const filtered = appts.filter(a => {
-    if (filter === 'all') return true
-    return a.status === filter
-  })
-
-  const pendingCount = appts.filter(a => a.status === 'pending').length
+  const filtered = appts.filter(a => filter === 'all' ? true : a.status === filter)
+  const pending = appts.filter(a => a.status === 'pending').length
 
   return (
-    <div style={{ padding: 32, maxWidth: 900 }} className="fade-in">
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>Appointments</h1>
-          <p style={{ color: 'var(--text-3)', fontSize: 13, marginTop: 2 }}>
-            {appts.length} total
-            {pendingCount > 0 && <span style={{ color: 'var(--yellow)', fontWeight: 600 }}> · {pendingCount} pending</span>}
-          </p>
-        </div>
-        <button className="btn btn-ghost" onClick={loadAppts}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-          Refresh
-        </button>
-      </div>
-
-      {/* Action message */}
-      {actionMsg && (
-        <div style={{
-          padding: '10px 14px',
-          borderRadius: 8,
-          marginBottom: 16,
-          fontSize: 13,
-          background: actionMsg.startsWith('✅') ? 'var(--green-dim)' : 'var(--red-dim)',
-          color: actionMsg.startsWith('✅') ? 'var(--green)' : 'var(--red)',
-          border: `1px solid ${actionMsg.startsWith('✅') ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-        }}>
-          {actionMsg}
-        </div>
-      )}
-
-      {/* Pending banner */}
-      {pendingCount > 0 && (
-        <div style={{
-          background: 'var(--yellow-dim)',
-          border: '1px solid rgba(245,158,11,0.25)',
-          borderRadius: 10,
-          padding: '12px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          marginBottom: 20,
-          fontSize: 13,
-          color: 'var(--yellow)',
-        }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-          <span><strong>{pendingCount} appointment{pendingCount > 1 ? 's' : ''}</strong> waiting for your response — click to confirm or decline</span>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
-        {['all', 'pending', 'confirmed', 'declined', 'completed'].map(f => (
-          <button key={f} onClick={() => setFilter(f)} style={{
-            padding: '5px 12px',
-            borderRadius: 99,
-            fontSize: 12,
-            fontWeight: 500,
-            background: filter === f ? 'var(--accent-dim)' : 'var(--bg-3)',
-            color: filter === f ? 'var(--accent-2)' : 'var(--text-3)',
-            border: `1px solid ${filter === f ? 'rgba(59,130,246,0.3)' : 'var(--border)'}`,
-            cursor: 'pointer',
-            transition: 'all 0.12s',
-            textTransform: 'capitalize',
-          }}>
-            {f}{f === 'pending' && pendingCount > 0 ? ` (${pendingCount})` : ''}
+    <div style={{ padding: 40, maxWidth: 960 }}>
+      <PageTitle
+        title="Appointments"
+        sub={`${appts.length} total${pending > 0 ? ` · ${pending} pending` : ''}`}
+        action={
+          <button onClick={load} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500, color: 'var(--text-4)', background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.12s', letterSpacing: '0.04em' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-2)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-4)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
           </button>
+        }
+      />
+
+      {msg && (
+        <div style={{ padding: '10px 16px', borderRadius: 8, marginBottom: 16, fontSize: 12, background: msg.startsWith('✅') ? 'var(--green-dim)' : 'var(--red-dim)', color: msg.startsWith('✅') ? 'var(--green)' : 'var(--red)', border: `1px solid ${msg.startsWith('✅') ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)'}` }}>
+          {msg}
+        </div>
+      )}
+
+      {pending > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--amber-dim)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 8, marginBottom: 16, fontSize: 11, color: 'var(--amber)', letterSpacing: '0.02em' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span><strong>{pending} appointment{pending > 1 ? 's' : ''}</strong> awaiting your response — click Review to confirm or decline</span>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+        {['all', 'pending', 'confirmed', 'declined', 'completed'].map(f => (
+          <Pill key={f} label={f === 'pending' && pending > 0 ? `Pending (${pending})` : f} active={filter === f} onClick={() => setFilter(f)} />
         ))}
       </div>
 
-      {/* Table */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
-            <div className="spinner" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="empty-state">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <rect x="3" y="4" width="18" height="18" rx="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <p>No {filter === 'all' ? '' : filter} appointments</p>
-          </div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                {['Customer', 'Service', 'Requested Time', 'Source', 'Status', 'Date', ''].map(h => (
-                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--text-3)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(appt => (
-                <tr key={appt.id} style={{
-                  borderBottom: '1px solid var(--border)',
-                  transition: 'background 0.1s',
-                }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-3)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <td style={{ padding: '12px 16px' }}>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>{appt.customer_name || '—'}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
-                      {appt.customer_phone?.startsWith('web_') ? 'Web chat' : appt.customer_phone || '—'}
-                    </div>
-                  </td>
-                  <td style={{ padding: '12px 16px', fontSize: 13, color: 'var(--text-2)' }}>{appt.service_type || '—'}</td>
-                  <td style={{ padding: '12px 16px', fontSize: 13, color: 'var(--text-2)' }}>{appt.preferred_time_text || '—'}</td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <span className={`badge ${appt.customer_phone?.startsWith('web_') ? 'badge-green' : 'badge-blue'}`}>
-                      {appt.customer_phone?.startsWith('web_') ? 'chat' : 'sms/voice'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <span className={`badge ${STATUS_COLORS[appt.status] || 'badge-gray'}`}>
-                      {appt.status || 'pending'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 16px', fontSize: 11, color: 'var(--text-3)' }}>
-                    {appt.created_at ? formatDistanceToNow(new Date(appt.created_at), { addSuffix: true }) : '—'}
-                  </td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <button
-                      className="btn btn-ghost"
-                      style={{ padding: '5px 12px', fontSize: 12 }}
-                      onClick={() => setSelected(appt)}
-                    >
-                      {appt.status === 'pending' ? 'Review →' : 'View →'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      <div style={{ background: 'var(--black-3)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+        {loading
+          ? <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><div className="spinner" /></div>
+          : filtered.length === 0
+            ? <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-4)', fontSize: 11, letterSpacing: '0.04em' }}>No {filter === 'all' ? '' : filter} appointments</div>
+            : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                    {['Customer', 'Service', 'Requested Time', 'Source', 'Status', 'Date', ''].map(h => (
+                      <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 9, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(a => (
+                    <tr key={a.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.1s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(232,232,232,0.02)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 2 }}>{a.customer_name || '—'}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-4)', fontFamily: 'var(--font-mono)' }}>{a.customer_phone?.startsWith('web_') ? 'Web chat' : a.customer_phone || '—'}</div>
+                      </td>
+                      <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-3)' }}>{a.service_type || '—'}</td>
+                      <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text)' }}>{a.preferred_time_text || '—'}</td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 99, background: a.customer_phone?.startsWith('web_') ? 'var(--green-dim)' : 'var(--blue-dim)', color: a.customer_phone?.startsWith('web_') ? 'var(--green)' : 'var(--blue)', border: '1px solid var(--border)' }}>
+                          {a.customer_phone?.startsWith('web_') ? 'chat' : 'sms/voice'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 16px' }}><StatusTag status={a.status} /></td>
+                      <td style={{ padding: '12px 16px', fontSize: 10, color: 'var(--text-4)' }}>{a.created_at ? formatDistanceToNow(new Date(a.created_at), { addSuffix: true }) : '—'}</td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <button onClick={() => setSelected(a)} style={{ padding: '4px 12px', borderRadius: 7, fontSize: 10, fontWeight: 500, color: 'var(--text-4)', background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer', letterSpacing: '0.04em', transition: 'all 0.12s' }}
+                          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-2)' }}
+                          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-4)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
+                          {a.status === 'pending' ? 'Review' : 'View'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )
+        }
       </div>
-
-      {/* Modal */}
-      {selected && (
-        <ConfirmModal
-          appt={selected}
-          onClose={() => setSelected(null)}
-          onAction={handleAction}
-        />
-      )}
+      {selected && <Modal appt={selected} onClose={() => setSelected(null)} onAction={handleAction} />}
     </div>
   )
 }

@@ -1,196 +1,206 @@
-import { useState } from 'react'
-import { Routes, Route, NavLink, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
-import { useTenant } from '../hooks/useTenant'
-import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications'
-import NotificationToast from '../components/NotificationToast'
-import Overview from './tabs/Overview'
-import Leads from './tabs/Leads'
-import Calls from './tabs/Calls'
-import Appointments from './tabs/Appointments'
-import Setup from './tabs/Setup'
-import Settings from './tabs/Settings'
+import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
+import { formatDistanceToNow } from 'date-fns'
 
-const NAV = [
-  { path: '', label: 'Overview', icon: 'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z' },
-  { path: 'leads', label: 'Leads', icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
-  { path: 'calls', label: 'Calls', icon: 'M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72 19.003 19.003 0 00.7 2.81 2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.09 6.09l1.27-1.27a2 2 0 012.11-.45 19.003 19.003 0 002.81.7A2 2 0 0122 16.92z' },
-  { path: 'appointments', label: 'Appointments', icon: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z' },
-  { path: 'setup', label: 'Setup', icon: 'M12 15a3 3 0 100-6 3 3 0 000 6z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z' },
-  { path: 'settings', label: 'Settings', icon: 'M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z M12 8a4 4 0 100 8 4 4 0 000-8z' },
-]
-
-function NavIcon({ d }) {
+function PageTitle({ title, sub, action }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d={d} />
-    </svg>
+    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28 }}>
+      <div>
+        <div style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Fono</div>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 300, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1 }}>{title}</h1>
+        {sub && <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 8, letterSpacing: '0.02em' }}>{sub}</p>}
+      </div>
+      {action}
+    </div>
   )
 }
 
-export default function Dashboard() {
-  const navigate = useNavigate()
-  const { tenant, user, loading, reload } = useTenant()
-  const { notifications, dismiss } = useRealtimeNotifications(tenant?.id)
+function Pill({ label, active, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: '4px 14px', borderRadius: 99, fontSize: 10, fontWeight: 500,
+      letterSpacing: '0.06em', textTransform: 'uppercase',
+      background: active ? 'rgba(232,232,232,0.08)' : 'transparent',
+      color: active ? 'var(--platinum-2)' : 'var(--text-4)',
+      border: `1px solid ${active ? 'rgba(232,232,232,0.16)' : 'var(--border)'}`,
+      cursor: 'pointer', transition: 'all 0.12s',
+    }}>{label}</button>
+  )
+}
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    navigate('/auth')
+const STATUS_STYLES = {
+  pending:   { bg: 'var(--amber-dim)', color: 'var(--amber)', border: 'rgba(251,191,36,0.15)' },
+  confirmed: { bg: 'var(--green-dim)', color: 'var(--green)', border: 'rgba(74,222,128,0.15)' },
+  declined:  { bg: 'var(--red-dim)',   color: 'var(--red)',   border: 'rgba(248,113,113,0.15)' },
+  completed: { bg: 'var(--blue-dim)',  color: 'var(--blue)',  border: 'rgba(96,165,250,0.15)' },
+  cancelled: { bg: 'var(--black-5)',   color: 'var(--text-4)', border: 'var(--border)' },
+}
+
+function StatusTag({ status }) {
+  const s = STATUS_STYLES[status] || STATUS_STYLES.pending
+  return (
+    <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 99, background: s.bg, color: s.color, border: `1px solid ${s.border}`, whiteSpace: 'nowrap' }}>
+      {status || 'pending'}
+    </span>
+  )
+}
+
+function Modal({ appt, onClose, onAction }) {
+  const [loading, setLoading] = useState(false)
+
+  const handle = async (status) => {
+    setLoading(true)
+    await onAction(appt.id, status)
+    setLoading(false)
+    onClose()
   }
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--black)' }}>
-      <div className="spinner" style={{ width: 20, height: 20 }} />
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 420, background: 'var(--black-3)', border: '1px solid var(--border-2)', borderRadius: 14, padding: 28 }}>
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Appointment Request</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 300, color: 'var(--text)' }}>{appt.customer_name || 'Unknown Customer'}</div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+          {[['Phone', appt.customer_phone?.startsWith('web_') ? 'Web chat' : appt.customer_phone], ['Service', appt.service_type], ['Address', appt.service_address], ['Issue', appt.issue_summary]].map(([label, value]) => (
+            <div key={label} style={{ display: 'flex', gap: 14 }}>
+              <span style={{ fontSize: 9, color: 'var(--text-4)', width: 72, flexShrink: 0, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', paddingTop: 1 }}>{label}</span>
+              <span style={{ fontSize: 12, color: value ? 'var(--text)' : 'var(--text-4)', lineHeight: 1.5 }}>{value || '—'}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ padding: '14px 16px', background: 'var(--black-4)', borderRadius: 8, marginBottom: 22, border: '1px solid var(--border)' }}>
+          <div style={{ fontSize: 9, color: 'var(--text-4)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Requested Time</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 300, color: 'var(--platinum)' }}>{appt.preferred_time_text || 'Not specified'}</div>
+        </div>
+
+        {appt.status === 'pending'
+          ? (
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => handle('declined')} disabled={loading} style={{ flex: 1, padding: '9px', borderRadius: 8, fontSize: 11, fontWeight: 500, background: 'var(--red-dim)', color: 'var(--red)', border: '1px solid rgba(248,113,113,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                {loading ? <span className="spinner" /> : null} Decline
+              </button>
+              <button onClick={() => handle('confirmed')} disabled={loading} style={{ flex: 1, padding: '9px', borderRadius: 8, fontSize: 11, fontWeight: 500, background: 'var(--green-dim)', color: 'var(--green)', border: '1px solid rgba(74,222,128,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                {loading ? <span className="spinner" /> : null} Confirm
+              </button>
+            </div>
+          )
+          : <div style={{ textAlign: 'center' }}><StatusTag status={appt.status} /></div>
+        }
+      </div>
     </div>
   )
+}
+
+export default function Appointments({ tenant }) {
+  const [appts, setAppts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selected, setSelected] = useState(null)
+  const [filter, setFilter] = useState('all')
+  const [msg, setMsg] = useState('')
+
+  useEffect(() => { if (tenant?.id) load() }, [tenant])
+
+  async function load() {
+    setLoading(true)
+    const { data } = await supabase.from('appointment_requests').select('*').eq('tenant_id', tenant.id).order('created_at', { ascending: false })
+    setAppts(data || [])
+    setLoading(false)
+  }
+
+  async function handleAction(id, status) {
+    const { error } = await supabase.from('appointment_requests').update({ status }).eq('id', id)
+    if (error) { setMsg(`❌ ${error.message}`) }
+    else { setMsg(`✅ Appointment ${status}`); setTimeout(() => setMsg(''), 3000); load() }
+  }
+
+  const filtered = appts.filter(a => filter === 'all' ? true : a.status === filter)
+  const pending = appts.filter(a => a.status === 'pending').length
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--black)' }}>
-      {/* Sidebar */}
-      <aside style={{
-        width: 216,
-        flexShrink: 0,
-        background: 'var(--black-2)',
-        borderRight: '1px solid var(--border)',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-      }}>
-        {/* Logo */}
-        <div style={{ padding: '22px 18px 18px', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 28, height: 28,
-              background: 'var(--platinum)',
-              borderRadius: 7,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--black)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.09 6.09l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
-              </svg>
-            </div>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 500, color: 'var(--platinum)', letterSpacing: '0.04em' }}>fono</span>
-          </div>
-        </div>
-
-        {/* Tenant status */}
-        {tenant && (
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
-            <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4 }}>
-              {tenant.name}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{
-                width: 5, height: 5, borderRadius: '50%',
-                background: tenant.twilio_number ? 'var(--green)' : 'var(--platinum-6)',
-              }} className={tenant.twilio_number ? 'dot-live' : ''} />
-              <span style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                {tenant.twilio_number ? 'Active' : 'Setup required'}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Nav */}
-        <nav style={{ flex: 1, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 1, overflowY: 'auto' }}>
-          {NAV.map(({ path, label, icon }) => (
-            <NavLink
-              key={path}
-              to={`/dashboard${path ? `/${path}` : ''}`}
-              end={path === ''}
-              style={({ isActive }) => ({
-                display: 'flex', alignItems: 'center', gap: 9,
-                padding: '7px 10px',
-                borderRadius: 7,
-                fontSize: 12,
-                fontWeight: isActive ? 500 : 400,
-                color: isActive ? 'var(--text)' : 'var(--text-4)',
-                background: isActive ? 'var(--accent-dim)' : 'transparent',
-                border: isActive ? '1px solid var(--border-2)' : '1px solid transparent',
-                transition: 'all 0.12s',
-                textDecoration: 'none',
-              })}
-            >
-              <NavIcon d={icon} />
-              {label}
-              {path === 'appointments' && notifications.filter(n => n.type === 'appointment').length > 0 && (
-                <div style={{
-                  marginLeft: 'auto', minWidth: 16, height: 16,
-                  background: 'var(--platinum)', borderRadius: 99,
-                  fontSize: 9, fontWeight: 700, color: 'var(--black)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  padding: '0 4px',
-                }}>
-                  {notifications.filter(n => n.type === 'appointment').length}
-                </div>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-
-        {/* User */}
-        <div style={{
-          padding: '12px 12px',
-          borderTop: '1px solid var(--border)',
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          <div style={{
-            width: 26, height: 26, borderRadius: '50%',
-            background: 'var(--black-5)',
-            border: '1px solid var(--border-2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 10, fontWeight: 600, color: 'var(--platinum-3)',
-            flexShrink: 0,
-          }}>
-            {user?.email?.[0]?.toUpperCase()}
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 10, color: 'var(--text-4)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {user?.email}
-            </div>
-          </div>
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <button style={{ color: 'var(--text-4)', padding: 3, display: 'flex' }} title="Notifications">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
-              </svg>
-            </button>
-            {notifications.length > 0 && (
-              <div style={{
-                position: 'absolute', top: 0, right: 0,
-                width: 14, height: 14,
-                background: 'var(--red)', borderRadius: '50%',
-                fontSize: 8, fontWeight: 700, color: 'white',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                {notifications.length}
-              </div>
-            )}
-          </div>
-          <button onClick={handleSignOut} style={{ color: 'var(--text-4)', padding: 3, display: 'flex', flexShrink: 0 }} title="Sign out">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
+    <div style={{ padding: 40, maxWidth: 960 }}>
+      <PageTitle
+        title="Appointments"
+        sub={`${appts.length} total${pending > 0 ? ` · ${pending} pending` : ''}`}
+        action={
+          <button onClick={load} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500, color: 'var(--text-4)', background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.12s', letterSpacing: '0.04em' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-2)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-4)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
           </button>
+        }
+      />
+
+      {msg && (
+        <div style={{ padding: '10px 16px', borderRadius: 8, marginBottom: 16, fontSize: 12, background: msg.startsWith('✅') ? 'var(--green-dim)' : 'var(--red-dim)', color: msg.startsWith('✅') ? 'var(--green)' : 'var(--red)', border: `1px solid ${msg.startsWith('✅') ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)'}` }}>
+          {msg}
         </div>
-      </aside>
+      )}
 
-      {/* Main */}
-      <main style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
-        <Routes>
-          <Route index element={<Overview tenant={tenant} user={user} reload={reload} />} />
-          <Route path="leads" element={<Leads tenant={tenant} />} />
-          <Route path="calls" element={<Calls tenant={tenant} />} />
-          <Route path="appointments" element={<Appointments tenant={tenant} />} />
-          <Route path="setup" element={<Setup tenant={tenant} reload={reload} />} />
-          <Route path="settings" element={<Settings tenant={tenant} user={user} reload={reload} />} />
-        </Routes>
-      </main>
+      {pending > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--amber-dim)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 8, marginBottom: 16, fontSize: 11, color: 'var(--amber)', letterSpacing: '0.02em' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span><strong>{pending} appointment{pending > 1 ? 's' : ''}</strong> awaiting your response — click Review to confirm or decline</span>
+        </div>
+      )}
 
-      <NotificationToast notifications={notifications} onDismiss={dismiss} />
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+        {['all', 'pending', 'confirmed', 'declined', 'completed'].map(f => (
+          <Pill key={f} label={f === 'pending' && pending > 0 ? `Pending (${pending})` : f} active={filter === f} onClick={() => setFilter(f)} />
+        ))}
+      </div>
+
+      <div style={{ background: 'var(--black-3)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+        {loading
+          ? <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><div className="spinner" /></div>
+          : filtered.length === 0
+            ? <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-4)', fontSize: 11, letterSpacing: '0.04em' }}>No {filter === 'all' ? '' : filter} appointments</div>
+            : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                    {['Customer', 'Service', 'Requested Time', 'Source', 'Status', 'Date', ''].map(h => (
+                      <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 9, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(a => (
+                    <tr key={a.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.1s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(232,232,232,0.02)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <td style={{ padding: '12px 16px' }}>
+                        <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 2 }}>{a.customer_name || '—'}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-4)', fontFamily: 'var(--font-mono)' }}>{a.customer_phone?.startsWith('web_') ? 'Web chat' : a.customer_phone || '—'}</div>
+                      </td>
+                      <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-3)' }}>{a.service_type || '—'}</td>
+                      <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text)' }}>{a.preferred_time_text || '—'}</td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 99, background: a.customer_phone?.startsWith('web_') ? 'var(--green-dim)' : 'var(--blue-dim)', color: a.customer_phone?.startsWith('web_') ? 'var(--green)' : 'var(--blue)', border: '1px solid var(--border)' }}>
+                          {a.customer_phone?.startsWith('web_') ? 'chat' : 'sms/voice'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 16px' }}><StatusTag status={a.status} /></td>
+                      <td style={{ padding: '12px 16px', fontSize: 10, color: 'var(--text-4)' }}>{a.created_at ? formatDistanceToNow(new Date(a.created_at), { addSuffix: true }) : '—'}</td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <button onClick={() => setSelected(a)} style={{ padding: '4px 12px', borderRadius: 7, fontSize: 10, fontWeight: 500, color: 'var(--text-4)', background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer', letterSpacing: '0.04em', transition: 'all 0.12s' }}
+                          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-2)' }}
+                          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-4)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
+                          {a.status === 'pending' ? 'Review' : 'View'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )
+        }
+      </div>
+      {selected && <Modal appt={selected} onClose={() => setSelected(null)} onAction={handleAction} />}
     </div>
   )
 }

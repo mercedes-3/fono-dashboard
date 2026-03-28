@@ -8,6 +8,7 @@ import Pricing from './pages/Pricing'
 import Terms from './pages/Terms'
 import Refund from './pages/Refund'
 import Onboarding from './pages/Onboarding'
+import Admin from './pages/Admin'
 
 function ProtectedRoute({ children }) {
   const [session, setSession] = useState(undefined)
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/refund" element={<Refund />} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

@@ -146,15 +146,21 @@ export default function Admin() {
     checkAuth()
   }, [])
 
-  async function checkAuth() {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session || session.user.email !== ADMIN_EMAIL) {
-      setUnauthorized(true)
-      setLoading(false)
-      return
-    }
-    loadData()
+ async function checkAuth() {
+  const { data: { session } } = await supabase.auth.getSession()
+  console.log('session email:', session?.user?.email)
+  if (!session) {
+    setUnauthorized(true)
+    setLoading(false)
+    return
   }
+  if (session.user.email !== ADMIN_EMAIL) {
+    setUnauthorized(true)
+    setLoading(false)
+    return
+  }
+  loadData()
+}
 
 async function loadData() {
   setLoading(true)

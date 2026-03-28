@@ -93,6 +93,7 @@ export default function Landing() {
 
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link to="/auth" className="btn btn-primary" style={{ padding: '11px 28px', fontSize: 13 }}>
+              <Link to="/pricing" style={{ fontSize: 12, color: 'var(--text-3)', padding: '7px 14px' }}>Pricing</Link>
               Start Free Trial
             </Link>
             <a href="#how" className="btn btn-ghost" style={{ padding: '11px 28px', fontSize: 13 }}>

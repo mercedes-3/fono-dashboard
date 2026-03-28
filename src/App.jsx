@@ -7,6 +7,7 @@ import Landing from './pages/Landing'
 import Pricing from './pages/Pricing'
 import Terms from './pages/Terms'
 import Refund from './pages/Refund'
+import Onboarding from './pages/Onboarding'
 
 function ProtectedRoute({ children }) {
   const [session, setSession] = useState(undefined)
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/refund" element={<Refund />} />
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

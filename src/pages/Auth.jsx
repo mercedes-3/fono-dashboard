@@ -86,7 +86,7 @@ export default function Auth() {
       } catch (err) {
         console.error('Tenant creation failed:', err)
       }
-      navigate('/dashboard')
+      navigate('/onboarding')
     } else {
       setError('Account created! Please check your email to confirm, then sign in.')
     }

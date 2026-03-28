@@ -156,15 +156,25 @@ export default function Admin() {
     loadData()
   }
 
-  async function loadData() {
-    setLoading(true)
-    const { data: tenantsData } = await supabase
-      .from('tenants')
-      .select('*')
-      .order('created_at', { ascending: false })
+async function loadData() {
+  setLoading(true)
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('https://nosnibbbggmlzavfylcd.supabase.co/functions/v1/admin-data', {
+      headers: { 'Authorization': `Bearer ${session.access_token}` }
+    })
+    const result = await res.json()
+    if (result.error) { setUnauthorized(true); setLoading(false); return }
 
-    setTenants(tenantsData || [])
-
+    setTenants(result.tenants || [])
+    const counts = {}
+    result.counts?.forEach(c => { counts[c.tenant_id] = c })
+    setLeadCounts(counts)
+  } catch (e) {
+    console.error(e)
+  }
+  setLoading(false)
+}
     // Load lead counts for each tenant
     if (tenantsData?.length) {
       const counts = {}

@@ -1,138 +1,269 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabase'
-import { formatDistanceToNow } from 'date-fns'
-import PageHeader from '../../components/PageHeader'
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-const STATUS = { pending: 'badge-amber', confirmed: 'badge-green', declined: 'badge-red', completed: 'badge-blue', cancelled: 'badge-gray' }
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
-function Modal({ appt, onClose, onAction }) {
-  const [loading, setLoading] = useState(false)
-  const handle = async (status) => {
-    setLoading(true)
-    await onAction(appt.id, status)
-    setLoading(false)
-    onClose()
-  }
+:root {
+  /* Core palette */
+  --black:       #080808;
+  --black-2:     #0d0d0d;
+  --black-3:     #111111;
+  --black-4:     #161616;
+  --black-5:     #1c1c1c;
+  --black-6:     #242424;
 
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div className="card fade-up" style={{ width: '100%', maxWidth: 420, border: '1px solid var(--border-2)' }} onClick={e => e.stopPropagation()}>
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, color: 'var(--text)', marginBottom: 4 }}>Appointment Request</div>
-          <div style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Review and respond</div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
-          {[['Customer', appt.customer_name], ['Phone', appt.customer_phone?.startsWith('web_') ? 'Web chat' : appt.customer_phone], ['Service', appt.service_type], ['Address', appt.service_address], ['Issue', appt.issue_summary]].map(([l, v]) => (
-            <div key={l} style={{ display: 'flex', gap: 12 }}>
-              <span style={{ fontSize: 10, color: 'var(--text-4)', width: 80, flexShrink: 0, fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase', paddingTop: 1 }}>{l}</span>
-              <span style={{ fontSize: 12, color: v ? 'var(--text)' : 'var(--text-4)' }}>{v || '—'}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ padding: '12px 16px', background: 'var(--black-4)', borderRadius: 8, marginBottom: 20, border: '1px solid var(--border)' }}>
-          <div style={{ fontSize: 9, color: 'var(--text-4)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>Requested Time</div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 400, color: 'var(--platinum)' }}>{appt.preferred_time_text || 'Not specified'}</div>
-        </div>
-        {appt.status === 'pending' ? (
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button className="btn btn-danger" style={{ flex: 1 }} onClick={() => handle('declined')} disabled={loading}>
-              {loading ? <span className="spinner" /> : null} Decline
-            </button>
-            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => handle('confirmed')} disabled={loading}>
-              {loading ? <span className="spinner" /> : null} Confirm
-            </button>
-          </div>
-        ) : (
-          <div style={{ textAlign: 'center' }}>
-            <span className={`badge ${STATUS[appt.status] || 'badge-gray'}`} style={{ padding: '6px 16px', fontSize: 11 }}>{appt.status}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  )
+  /* Platinum scale */
+  --platinum:    #e8e8e8;
+  --platinum-2:  #c8c8c8;
+  --platinum-3:  #a8a8a8;
+  --platinum-4:  #888888;
+  --platinum-5:  #686868;
+  --platinum-6:  #484848;
+
+  /* Semantic */
+  --bg:          var(--black);
+  --bg-2:        var(--black-2);
+  --bg-3:        var(--black-3);
+  --bg-4:        var(--black-4);
+  --bg-5:        var(--black-5);
+  --surface:     var(--black-3);
+  --border:      rgba(232,232,232,0.06);
+  --border-2:    rgba(232,232,232,0.10);
+  --border-3:    rgba(232,232,232,0.16);
+
+  --text:        #f0f0f0;
+  --text-2:      var(--platinum-3);
+  --text-3:      var(--platinum-5);
+  --text-4:      var(--platinum-6);
+
+  --accent:      var(--platinum);
+  --accent-dim:  rgba(232,232,232,0.06);
+  --accent-glow: rgba(232,232,232,0.08);
+
+  --green:       #4ade80;
+  --green-dim:   rgba(74,222,128,0.08);
+  --red:         #f87171;
+  --red-dim:     rgba(248,113,113,0.08);
+  --amber:       #fbbf24;
+  --amber-dim:   rgba(251,191,36,0.08);
+  --blue:        #60a5fa;
+  --blue-dim:    rgba(96,165,250,0.08);
+
+  --radius:      8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font:         'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  --shadow:      0 1px 3px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3);
+  --shadow-lg:   0 4px 24px rgba(0,0,0,0.6), 0 16px 64px rgba(0,0,0,0.4);
 }
 
-export default function Appointments({ tenant }) {
-  const [appts, setAppts] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [selected, setSelected] = useState(null)
-  const [filter, setFilter] = useState('all')
-  const [msg, setMsg] = useState('')
+html { font-size: 14px; }
 
-  useEffect(() => { if (tenant?.id) load() }, [tenant])
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
 
-  async function load() {
-    setLoading(true)
-    const { data } = await supabase.from('appointment_requests').select('*').eq('tenant_id', tenant.id).order('created_at', { ascending: false })
-    setAppts(data || [])
-    setLoading(false)
-  }
+a { color: inherit; text-decoration: none; }
+button { font-family: var(--font); cursor: pointer; border: none; background: none; }
+input, textarea, select { font-family: var(--font); }
 
-  async function handleAction(id, status) {
-    const { error } = await supabase.from('appointment_requests').update({ status }).eq('id', id)
-    if (error) { setMsg(`❌ ${error.message}`) }
-    else { setMsg(`✅ Appointment ${status}`); setTimeout(() => setMsg(''), 3000); load() }
-  }
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--black-6); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--platinum-6); }
 
-  const filtered = appts.filter(a => filter === 'all' ? true : a.status === filter)
-  const pending = appts.filter(a => a.status === 'pending').length
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
 
-  return (
-    <div style={{ padding: 40, maxWidth: 960 }} className="fade-up">
-      <PageHeader
-        title="Appointments"
-        sub={`${appts.length} total${pending > 0 ? ` · ${pending} pending` : ''}`}
-        action={<button className="btn btn-ghost" onClick={load}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>Refresh</button>}
-      />
+.card-sm {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
 
-      {msg && <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 16, fontSize: 12, background: msg.startsWith('✅') ? 'var(--green-dim)' : 'var(--red-dim)', color: msg.startsWith('✅') ? 'var(--green)' : 'var(--red)', border: `1px solid ${msg.startsWith('✅') ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)'}` }}>{msg}</div>}
+/* ── Badges ─────────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 
-      {pending > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--amber-dim)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 8, marginBottom: 16, fontSize: 11, color: 'var(--amber)' }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-          <span><strong>{pending} appointment{pending > 1 ? 's' : ''}</strong> awaiting your response</span>
-        </div>
-      )}
+.badge-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(74,222,128,0.15); }
+.badge-red    { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(248,113,113,0.15); }
+.badge-amber  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid rgba(251,191,36,0.15); }
+.badge-blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid rgba(96,165,250,0.15); }
+.badge-plat   { background: var(--accent-dim); color: var(--platinum-2); border: 1px solid var(--border-2); }
+.badge-gray   { background: var(--black-5);    color: var(--text-3); border: 1px solid var(--border); }
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
-        {['all', 'pending', 'confirmed', 'declined', 'completed'].map(f => (
-          <button key={f} onClick={() => setFilter(f)} style={{
-            padding: '4px 12px', borderRadius: 99, fontSize: 10, fontWeight: 500,
-            letterSpacing: '0.04em', textTransform: 'uppercase',
-            background: filter === f ? 'var(--accent-dim)' : 'transparent',
-            color: filter === f ? 'var(--platinum-2)' : 'var(--text-4)',
-            border: `1px solid ${filter === f ? 'var(--border-3)' : 'var(--border)'}`,
-            cursor: 'pointer', transition: 'all 0.12s',
-          }}>{f}{f === 'pending' && pending > 0 ? ` (${pending})` : ''}</button>
-        ))}
-      </div>
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        {loading ? <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><div className="spinner" /></div>
-        : filtered.length === 0 ? <div className="empty"><p>No {filter === 'all' ? '' : filter} appointments</p></div>
-        : (
-          <table className="table">
-            <thead><tr>{['Customer', 'Service', 'Requested Time', 'Source', 'Status', 'Date', ''].map(h => <th key={h}>{h}</th>)}</tr></thead>
-            <tbody>
-              {filtered.map(a => (
-                <tr key={a.id}>
-                  <td>
-                    <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{a.customer_name || '—'}</div>
-                    <div style={{ fontSize: 10, color: 'var(--text-4)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>{a.customer_phone?.startsWith('web_') ? 'Web chat' : a.customer_phone || '—'}</div>
-                  </td>
-                  <td>{a.service_type || '—'}</td>
-                  <td style={{ color: 'var(--text)' }}>{a.preferred_time_text || '—'}</td>
-                  <td><span className={`badge ${a.customer_phone?.startsWith('web_') ? 'badge-green' : 'badge-blue'}`}>{a.customer_phone?.startsWith('web_') ? 'chat' : 'sms/voice'}</span></td>
-                  <td><span className={`badge ${STATUS[a.status] || 'badge-gray'}`}>{a.status || 'pending'}</span></td>
-                  <td style={{ fontSize: 10, color: 'var(--text-4)' }}>{a.created_at ? formatDistanceToNow(new Date(a.created_at), { addSuffix: true }) : '—'}</td>
-                  <td><button className="btn btn-ghost" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => setSelected(a)}>{a.status === 'pending' ? 'Review' : 'View'}</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-      {selected && <Modal appt={selected} onClose={() => setSelected(null)} onAction={handleAction} />}
-    </div>
-  )
+.btn-primary {
+  background: var(--platinum);
+  color: var(--black);
+  border: 1px solid transparent;
+}
+.btn-primary:hover { background: var(--platinum-2); }
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-3);
+  border: 1px solid var(--border-2);
+}
+.btn-ghost:hover { background: var(--accent-dim); color: var(--text); border-color: var(--border-3); }
+
+.btn-danger {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid rgba(248,113,113,0.15);
+}
+.btn-danger:hover { background: rgba(248,113,113,0.15); }
+
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+/* ── Inputs ─────────────────────────────────────────────────────────────── */
+.input {
+  width: 100%;
+  background: var(--black-4);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  color: var(--text);
+  font-size: 13px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+  font-family: var(--font);
+}
+.input:focus {
+  border-color: var(--border-3);
+  box-shadow: 0 0 0 3px rgba(232,232,232,0.04);
+}
+.input::placeholder { color: var(--text-4); }
+
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-3);
+  margin-bottom: 6px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.fade-up { animation: fadeUp 0.3s ease forwards; }
+
+/* ── Loading spinner ────────────────────────────────────────────────────── */
+.spinner {
+  width: 14px; height: 14px;
+  border: 1.5px solid var(--border-2);
+  border-top-color: var(--platinum-3);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── Empty states ───────────────────────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 24px;
+  color: var(--text-4);
+  text-align: center;
+}
+.empty svg { opacity: 0.2; margin-bottom: 4px; }
+.empty p { font-size: 12px; letter-spacing: 0.03em; }
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+.table { width: 100%; border-collapse: collapse; }
+.table th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-4);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+.table td {
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--border);
+}
+.table tr:last-child td { border-bottom: none; }
+.table tbody tr { transition: background 0.1s; }
+.table tbody tr:hover { background: var(--accent-dim); }
+
+/* ── Divider ────────────────────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0;
+}
+
+/* ── Pulse dot ──────────────────────────────────────────────────────────── */
+.dot-live {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s ease infinite;
+  display: inline-block;
 }

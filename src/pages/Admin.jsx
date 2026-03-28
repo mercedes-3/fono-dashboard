@@ -175,26 +175,7 @@ async function loadData() {
   }
   setLoading(false)
 }
-    // Load lead counts for each tenant
-    if (tenantsData?.length) {
-      const counts = {}
-      await Promise.all(tenantsData.map(async (t) => {
-        const { data: leads } = await supabase
-          .from('leads')
-          .select('id, intake_status, full_name, phone, service_type')
-          .eq('tenant_id', t.id)
-          .order('created_at', { ascending: false })
-        counts[t.id] = {
-          total: leads?.length || 0,
-          completed: leads?.filter(l => l.intake_status === 'schedule_captured').length || 0,
-          recent: leads?.slice(0, 3) || [],
-        }
-      }))
-      setLeadCounts(counts)
-    }
 
-    setLoading(false)
-  }
 
   if (unauthorized) return (
     <div style={{ minHeight: '100vh', background: 'var(--black)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font)' }}>

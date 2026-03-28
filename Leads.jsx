@@ -1,189 +1,148 @@
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { supabase } from '../../lib/supabase'
+import { formatDistanceToNow } from 'date-fns'
 
-const FEATURES = [
-  { icon: '📞', title: 'Always Answers', desc: 'Your AI receptionist picks up every call, 24 hours a day, 7 days a week — no voicemail, no missed leads.' },
-  { icon: '💬', title: 'SMS Intake', desc: 'Qualifies leads over text in a natural conversation. Collects name, address, service type, issue, and preferred time.' },
-  { icon: '🎙️', title: 'Voice AI', desc: 'Human-sounding voice powered by ElevenLabs. Customers don\'t know it\'s AI — they just know they were helped.' },
-  { icon: '📅', title: 'Books Appointments', desc: 'Schedules jobs directly during the call or conversation. Contractor gets an instant SMS to confirm or decline.' },
-  { icon: '🌐', title: 'Web Chat Widget', desc: 'Embeddable chat bubble for any website. One line of code. Fully branded to the contractor.' },
-  { icon: '📊', title: 'Live Dashboard', desc: 'Every lead, call, and appointment in one place. Real-time notifications. No spreadsheets.' },
-]
-
-const STATS = [
-  { value: '24/7', label: 'Always available' },
-  { value: '< 1s', label: 'Response time' },
-  { value: '100%', label: 'Calls answered' },
-  { value: '3×', label: 'More bookings' },
-]
-
-const HOW = [
-  { step: '01', title: 'Sign up', desc: 'Create your account and set up your business profile in under 5 minutes.' },
-  { step: '02', title: 'Get your number', desc: 'We provision a dedicated local phone number for your AI receptionist instantly.' },
-  { step: '03', title: 'Forward your calls', desc: 'Set up call forwarding from your business line. The AI handles everything from there.' },
-  { step: '04', title: 'Win more jobs', desc: 'Watch leads roll in. Review, confirm, and close — all from your dashboard.' },
-]
-
-export default function Landing() {
+function PageTitle({ title, sub, action }) {
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--black)', fontFamily: 'var(--font)', color: 'var(--text)' }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28 }}>
+      <div>
+        <div style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Fono</div>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 300, color: 'var(--text)', letterSpacing: '-0.01em', lineHeight: 1 }}>{title}</h1>
+        {sub && <p style={{ fontSize: 11, color: 'var(--text-4)', marginTop: 8, letterSpacing: '0.02em' }}>{sub}</p>}
+      </div>
+      {action}
+    </div>
+  )
+}
 
-      {/* Nav */}
-      <nav style={{
-        position: 'sticky', top: 0, zIndex: 100,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 40px', height: 60,
-        background: 'rgba(8,8,8,0.85)',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid var(--border)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 28, height: 28, background: 'var(--platinum)', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--black)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.09 6.09l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
-            </svg>
-          </div>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 500, color: 'var(--platinum)', letterSpacing: '0.04em' }}>fono</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Link to="/auth" style={{ fontSize: 12, color: 'var(--text-3)', padding: '7px 14px', borderRadius: 7, transition: 'color 0.15s' }}>Sign In</Link>
-          <Link to="/auth" className="btn btn-primary" style={{ fontSize: 12, padding: '7px 16px' }}>Get Started</Link>
-        </div>
-      </nav>
+function Pill({ label, active, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: '4px 14px', borderRadius: 99, fontSize: 10, fontWeight: 500,
+      letterSpacing: '0.06em', textTransform: 'uppercase',
+      background: active ? 'rgba(232,232,232,0.08)' : 'transparent',
+      color: active ? 'var(--platinum-2)' : 'var(--text-4)',
+      border: `1px solid ${active ? 'rgba(232,232,232,0.16)' : 'var(--border)'}`,
+      cursor: 'pointer', transition: 'all 0.12s',
+    }}>{label}</button>
+  )
+}
 
-      {/* Hero */}
-      <section style={{
-        position: 'relative',
-        padding: '120px 40px 100px',
-        textAlign: 'center',
-        overflow: 'hidden',
-      }}>
-        {/* Ambient */}
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,232,232,0.04) 0%, transparent 70%)' }} />
-        <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(232,232,232,0.02) 0%, transparent 70%)', pointerEvents: 'none' }} />
+const STATUS_MAP = {
+  schedule_captured: { label: 'Complete', bg: 'var(--green-dim)', color: 'var(--green)', border: 'rgba(74,222,128,0.15)' },
+  collecting:        { label: 'Collecting', bg: 'var(--black-5)', color: 'var(--text-4)', border: 'var(--border)' },
+  new:               { label: 'New', bg: 'var(--black-5)', color: 'var(--text-4)', border: 'var(--border)' },
+}
 
-        <div style={{ position: 'relative', maxWidth: 760, margin: '0 auto' }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '5px 14px', borderRadius: 99,
-            background: 'var(--accent-dim)', border: '1px solid var(--border-2)',
-            fontSize: 10, color: 'var(--platinum-3)', fontWeight: 500,
-            letterSpacing: '0.06em', textTransform: 'uppercase',
-            marginBottom: 32,
-          }}>
-            <div className="dot-live" />
-            AI Receptionist for Service Businesses
-          </div>
+function StatusPill({ status }) {
+  const s = STATUS_MAP[status] || STATUS_MAP.new
+  return (
+    <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 99, background: s.bg, color: s.color, border: `1px solid ${s.border}`, whiteSpace: 'nowrap' }}>
+      {s.label}
+    </span>
+  )
+}
 
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(48px, 8vw, 80px)',
-            fontWeight: 300,
-            color: 'var(--text)',
-            lineHeight: 1.1,
-            letterSpacing: '-0.02em',
-            marginBottom: 24,
-          }}>
-            Never miss a lead.<br />
-            <span style={{ color: 'var(--platinum-3)', fontStyle: 'italic' }}>Never lose a job.</span>
-          </h1>
+export default function Leads({ tenant }) {
+  const [leads, setLeads] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selected, setSelected] = useState(null)
+  const [filter, setFilter] = useState('all')
 
-          <p style={{ fontSize: 16, color: 'var(--text-3)', lineHeight: 1.7, maxWidth: 480, margin: '0 auto 40px', fontWeight: 300 }}>
-            Fono answers every call, qualifies every lead, and books appointments automatically — while you're on the job site.
-          </p>
+  useEffect(() => { if (tenant?.id) load() }, [tenant])
 
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link to="/auth" className="btn btn-primary" style={{ padding: '11px 28px', fontSize: 13 }}>
-              Start Free Trial
-            </Link>
-            <a href="#how" className="btn btn-ghost" style={{ padding: '11px 28px', fontSize: 13 }}>
-              See How It Works
-            </a>
-          </div>
-        </div>
-      </section>
+  async function load() {
+    setLoading(true)
+    const { data } = await supabase.from('leads').select('*').eq('tenant_id', tenant.id).order('created_at', { ascending: false })
+    setLeads(data || [])
+    setLoading(false)
+  }
 
-      {/* Stats */}
-      <section style={{ padding: '0 40px 80px', maxWidth: 860, margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--border)', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)' }}>
-          {STATS.map(({ value, label }) => (
-            <div key={label} style={{ padding: '28px 24px', background: 'var(--black-2)', textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 300, color: 'var(--platinum)', letterSpacing: '-0.02em', marginBottom: 6 }}>{value}</div>
-              <div style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+  const filtered = leads.filter(l => {
+    if (filter === 'sms') return !l.phone?.startsWith('web_') && l.source !== 'voice'
+    if (filter === 'voice') return l.source === 'voice'
+    if (filter === 'chat') return l.phone?.startsWith('web_')
+    if (filter === 'complete') return l.intake_status === 'schedule_captured'
+    return true
+  })
 
-      {/* Features */}
-      <section style={{ padding: '60px 40px 80px', maxWidth: 960, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 56 }}>
-          <div style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Capabilities</div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 40, fontWeight: 300, color: 'var(--text)', letterSpacing: '-0.01em' }}>
-            Everything your receptionist does,<br />
-            <span style={{ fontStyle: 'italic', color: 'var(--platinum-3)' }}>done automatically.</span>
-          </h2>
-        </div>
+  return (
+    <div style={{ padding: 40, maxWidth: 960 }}>
+      <PageTitle
+        title="Leads"
+        sub={`${leads.length} total · ${leads.filter(l => l.intake_status === 'schedule_captured').length} completed`}
+        action={
+          <button onClick={load} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500, color: 'var(--text-4)', background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.12s', letterSpacing: '0.04em' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-2)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-4)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+        }
+      />
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--border)', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)' }}>
-          {FEATURES.map(({ icon, title, desc }) => (
-            <div key={title} style={{ padding: '28px 24px', background: 'var(--black-2)', transition: 'background 0.15s' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--black-3)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'var(--black-2)'}
-            >
-              <div style={{ fontSize: 22, marginBottom: 12 }}>{icon}</div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>{title}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-4)', lineHeight: 1.6 }}>{desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+        {[['all','All'], ['sms','SMS'], ['voice','Voice'], ['chat','Chat'], ['complete','Complete']].map(([val, label]) => (
+          <Pill key={val} label={label} active={filter === val} onClick={() => setFilter(val)} />
+        ))}
+      </div>
 
-      {/* How it works */}
-      <section id="how" style={{ padding: '60px 40px 80px', maxWidth: 860, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 56 }}>
-          <div style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Process</div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 40, fontWeight: 300, color: 'var(--text)', letterSpacing: '-0.01em' }}>Up and running in minutes</h2>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-          {HOW.map(({ step, title, desc }) => (
-            <div key={step} className="card" style={{ position: 'relative' }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.08em', marginBottom: 16 }}>{step}</div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>{title}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-4)', lineHeight: 1.6 }}>{desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section style={{ padding: '60px 40px 100px', textAlign: 'center' }}>
-        <div style={{ maxWidth: 540, margin: '0 auto' }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 48, fontWeight: 300, color: 'var(--text)', lineHeight: 1.15, letterSpacing: '-0.02em', marginBottom: 16 }}>
-            Stop letting missed calls<br />
-            <span style={{ fontStyle: 'italic', color: 'var(--platinum-3)' }}>cost you money.</span>
-          </h2>
-          <p style={{ fontSize: 13, color: 'var(--text-4)', marginBottom: 32, lineHeight: 1.7 }}>
-            Every missed call is a missed job. Fono makes sure that never happens again.
-          </p>
-          <Link to="/auth" className="btn btn-primary" style={{ padding: '12px 32px', fontSize: 13 }}>
-            Get Started Today
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer style={{ borderTop: '1px solid var(--border)', padding: '24px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 20, height: 20, background: 'var(--platinum)', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--black)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.09 6.09l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
-            </svg>
-          </div>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--platinum-3)', letterSpacing: '0.04em' }}>fono</span>
-        </div>
-        <p style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.04em' }}>© 2025 Fono. All rights reserved.</p>
-      </footer>
+      <div style={{ background: 'var(--black-3)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+        {loading
+          ? <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><div className="spinner" /></div>
+          : filtered.length === 0
+            ? <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-4)', fontSize: 11, letterSpacing: '0.04em' }}>No leads found</div>
+            : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                    {['Name', 'Phone', 'Service', 'Source', 'Status', 'Date', ''].map(h => (
+                      <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 9, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(lead => (
+                    <>
+                      <tr key={lead.id}
+                        onClick={() => setSelected(selected?.id === lead.id ? null : lead)}
+                        style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'background 0.1s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(232,232,232,0.02)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <td style={{ padding: '12px 16px', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{lead.full_name || '—'}</td>
+                        <td style={{ padding: '12px 16px', fontSize: 11, color: 'var(--text-4)', fontFamily: 'var(--font-mono)' }}>{lead.phone?.startsWith('web_') ? 'Web chat' : lead.phone || '—'}</td>
+                        <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-3)' }}>{lead.service_type || '—'}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 99, background: lead.source === 'voice' ? 'var(--blue-dim)' : lead.phone?.startsWith('web_') ? 'var(--green-dim)' : 'var(--black-5)', color: lead.source === 'voice' ? 'var(--blue)' : lead.phone?.startsWith('web_') ? 'var(--green)' : 'var(--text-4)', border: '1px solid var(--border)' }}>
+                            {lead.source || 'sms'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px' }}><StatusPill status={lead.intake_status} /></td>
+                        <td style={{ padding: '12px 16px', fontSize: 10, color: 'var(--text-4)' }}>{lead.created_at ? formatDistanceToNow(new Date(lead.created_at), { addSuffix: true }) : '—'}</td>
+                        <td style={{ padding: '12px 16px', fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.04em' }}>{selected?.id === lead.id ? 'Close ↑' : 'View →'}</td>
+                      </tr>
+                      {selected?.id === lead.id && (
+                        <tr key={`${lead.id}-detail`} style={{ background: 'rgba(232,232,232,0.02)' }}>
+                          <td colSpan={7} style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
+                              {[['Name', lead.full_name], ['Phone', lead.phone?.startsWith('web_') ? 'Web chat' : lead.phone], ['Address', lead.service_address], ['Service', lead.service_type], ['Issue', lead.issue_summary], ['Preferred Time', lead.preferred_time_text], ['Status', lead.intake_status], ['Source', lead.source]].map(([label, value]) => (
+                                <div key={label}>
+                                  <div style={{ fontSize: 9, color: 'var(--text-4)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 5 }}>{label}</div>
+                                  <div style={{ fontSize: 12, color: value ? 'var(--text)' : 'var(--text-4)' }}>{value || '—'}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  ))}
+                </tbody>
+              </table>
+            )
+        }
+      </div>
     </div>
   )
 }

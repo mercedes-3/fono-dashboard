@@ -194,7 +194,7 @@ export default function Setup({ tenant, reload }) {
               </div>
             </div>
 
-            
+            <a
               href={`https://www.facebook.com/v18.0/dialog/oauth?client_id=placeholder&redirect_uri=${encodeURIComponent(window.location.origin + '/meta-callback')}&scope=pages_manage_metadata,pages_read_engagement,leads_retrieval,ads_management&state=${tenant?.id}`}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1877F2', color: 'white', textDecoration: 'none', letterSpacing: '0.02em', alignSelf: 'flex-start' }}
             >

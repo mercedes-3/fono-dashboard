@@ -174,37 +174,39 @@ export default function Setup({ tenant, reload }) {
           )
         }
       </Section>
+
       {/* Meta / Facebook */}
-<Section title="Facebook Lead Ads" sub="Connect your Facebook page to sync leads automatically">
-  {tenant.meta_connected ? (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', background: 'var(--green-dim)', borderRadius: 9, border: '1px solid rgba(74,222,128,0.15)' }}>
-      <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', flexShrink: 0 }} className="dot-live" />
-      <div>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--green)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>Connected</div>
-        <div style={{ fontSize: 12, color: 'var(--text)' }}>Facebook page linked · leads sync automatically</div>
-      </div>
-    </div>
-  ) : (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ padding: '14px 16px', background: 'var(--black-4)', border: '1px solid var(--border)', borderRadius: 9 }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>How it works</div>
-        <div style={{ fontSize: 11, color: 'var(--text-4)', lineHeight: 1.8 }}>
-          Connect your Facebook Business Page and every lead from your Facebook ads will instantly appear in Fono — with automatic AI SMS follow-up within seconds.
-        </div>
-      </div>
-      
-       href={`https://www.facebook.com/v18.0/dialog/oauth?client_id=placeholder&redirect_uri=${encodeURIComponent(window.location.origin + '/meta-callback')}&scope=pages_manage_metadata,pages_read_engagement,leads_retrieval,ads_management&state=${tenant?.id}`}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1877F2', color: 'white', textDecoration: 'none', letterSpacing: '0.02em', alignSelf: 'flex-start' }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
-        Connect Facebook Page
-      </a>
-      <p style={{ fontSize: 10, color: 'var(--text-4)', lineHeight: 1.6, letterSpacing: '0.02em' }}>
-        You will need a Facebook Business Page with at least one active Lead Ad form.
-      </p>
-    </div>
-  )}
-</Section>
+      <Section title="Facebook Lead Ads" sub="Connect your Facebook page to sync leads automatically">
+        {tenant.meta_connected ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', background: 'var(--green-dim)', borderRadius: 9, border: '1px solid rgba(74,222,128,0.15)' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', flexShrink: 0 }} className="dot-live" />
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--green)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>Connected</div>
+              <div style={{ fontSize: 12, color: 'var(--text)' }}>Facebook page linked · leads sync automatically</div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ padding: '14px 16px', background: 'var(--black-4)', border: '1px solid var(--border)', borderRadius: 9 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>How it works</div>
+              <div style={{ fontSize: 11, color: 'var(--text-4)', lineHeight: 1.8 }}>
+                Connect your Facebook Business Page and every lead from your Facebook ads will instantly appear in Fono — with automatic AI SMS follow-up within seconds.
+              </div>
+            </div>
+
+            
+              href={`https://www.facebook.com/v18.0/dialog/oauth?client_id=placeholder&redirect_uri=${encodeURIComponent(window.location.origin + '/meta-callback')}&scope=pages_manage_metadata,pages_read_engagement,leads_retrieval,ads_management&state=${tenant?.id}`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1877F2', color: 'white', textDecoration: 'none', letterSpacing: '0.02em', alignSelf: 'flex-start' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+              Connect Facebook Page
+            </a>
+            <p style={{ fontSize: 10, color: 'var(--text-4)', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+              You will need a Facebook Business Page with at least one active Lead Ad form.
+            </p>
+          </div>
+        )}
+      </Section>
     </div>
   )
 }

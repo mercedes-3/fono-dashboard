@@ -32,7 +32,7 @@ export default function MetaCallback() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${session.access_token}`
           },
-          body: JSON.stringify({ code, tenant_id: tenantId })
+         body: JSON.stringify({ code, tenant_id: tenantId, redirect_uri: window.location.origin + '/meta-callback' })
         })
 
         const data = await res.json()

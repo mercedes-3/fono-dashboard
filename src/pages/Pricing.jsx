@@ -151,7 +151,7 @@ export default function Pricing() {
                 </span>
               </label>
 
-              
+              <a
                 href="https://buy.stripe.com/28EdRbfsI5cfbnPfHI7ss05"
                 style={{
                   display: 'block', width: '100%', textAlign: 'center',

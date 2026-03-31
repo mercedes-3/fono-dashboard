@@ -145,14 +145,14 @@ export default function Pricing() {
                 <span style={{ fontSize: 11, color: 'var(--text-4)', lineHeight: 1.7 }}>
                   By completing this purchase, I agree to the{' '}
                   <Link to="/terms" style={{ color: 'var(--platinum-3)', textDecoration: 'underline' }}>Terms of Service</Link>
-{' '}and{' '}
-<Link to="/refund" style={{ color: 'var(--platinum-3)', textDecoration: 'underline' }}>Refund Policy</Link>
-                  I acknowledge that the $3,500 setup fee is non-refundable once onboarding and system configuration begin.
+                  {' '}and{' '}
+                  <Link to="/refund" style={{ color: 'var(--platinum-3)', textDecoration: 'underline' }}>Refund Policy</Link>.
+                  {' '}I acknowledge that the $3,500 setup fee is non-refundable once onboarding and system configuration begin.
                 </span>
               </label>
 
-              <Link
-                to="/auth"
+              
+                href="https://buy.stripe.com/aFadRb2FW8or63v7bc7ss04"
                 style={{
                   display: 'block', width: '100%', textAlign: 'center',
                   padding: '13px', borderRadius: 9, fontSize: 13, fontWeight: 500,
@@ -166,7 +166,7 @@ export default function Pricing() {
                 }}
               >
                 Start Capturing Missed Calls
-              </Link>
+              </a>
 
               <p style={{ textAlign: 'center', fontSize: 10, color: 'var(--text-4)', marginTop: 10, letterSpacing: '0.04em' }}>
                 No demo required · Instant setup · 14-day guarantee
@@ -194,7 +194,7 @@ export default function Pricing() {
           </div>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--platinum-3)', letterSpacing: '0.04em' }}>fono</span>
         </div>
-        <p style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.04em' }}>© 2025 Fono. All rights reserved.</p>
+        <p style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.04em' }}>© 2026 Fono. All rights reserved.</p>
       </footer>
     </div>
   )

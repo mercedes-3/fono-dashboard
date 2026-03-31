@@ -152,7 +152,7 @@ export default function Pricing() {
               </label>
 
               
-                href="https://buy.stripe.com/aFadRb2FW8or63v7bc7ss04"
+                href="https://buy.stripe.com/28EdRbfsI5cfbnPfHI7ss05"
                 style={{
                   display: 'block', width: '100%', textAlign: 'center',
                   padding: '13px', borderRadius: 9, fontSize: 13, fontWeight: 500,

@@ -195,7 +195,7 @@ export default function Setup({ tenant, reload }) {
             </div>
 
             <a
-              href={`https://www.facebook.com/v18.0/dialog/oauth?client_id=1427002128585989&redirect_uri=${encodeURIComponent(window.location.origin + '/meta-callback')}&scope=pages_manage_metadata,pages_read_engagement,leads_retrieval,ads_management&state=${tenant?.id}`}
+             href={`https://www.facebook.com/v18.0/dialog/oauth?client_id=1427002128585989&redirect_uri=${encodeURIComponent(window.location.origin + '/meta-callback')}&scope=pages_show_list,pages_read_engagement,leads_retrieval&state=${tenant?.id}`}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1877F2', color: 'white', textDecoration: 'none', letterSpacing: '0.02em', alignSelf: 'flex-start' }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>

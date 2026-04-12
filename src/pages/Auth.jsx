@@ -125,11 +125,12 @@ export default function Auth() {
     }}>
       <div style={{ width: '100%', maxWidth: 400 }}>
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-         
-          <p style={{ color: 'var(--text-4)', fontSize: 11, letterSpacing: '0.04em' }}>AI Receptionist for Service Businesses</p>
-        </div>
-<span style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 300, color: 'var(--platinum)', letterSpacing: '0.04em' }}>fono</span>
+       <div style={{ textAlign: 'center', marginBottom: 36 }}>
+            <div style={{ marginBottom: 8 }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 300, color: 'var(--platinum)', letterSpacing: '0.04em' }}>fono</span>
+            </div>
+            <p style={{ color: 'var(--text-4)', fontSize: 11, letterSpacing: '0.04em' }}>AI Receptionist for Service Businesses</p>
+          </div>
         {/* Tabs */}
         <div style={{
           display: 'flex',

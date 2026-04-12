@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, startOfWeek, addDays, format, isSameDay, addWeeks, subWeeks } from 'date-fns'
 
 function PageTitle({ title, sub, action }) {
   return (
@@ -32,7 +32,7 @@ const STATUS_STYLES = {
   pending:   { bg: 'var(--amber-dim)', color: 'var(--amber)', border: 'rgba(251,191,36,0.15)' },
   confirmed: { bg: 'var(--green-dim)', color: 'var(--green)', border: 'rgba(74,222,128,0.15)' },
   declined:  { bg: 'var(--red-dim)',   color: 'var(--red)',   border: 'rgba(248,113,113,0.15)' },
-  completed: { bg: 'var(--blue-dim)',  color: 'var(--blue)',  border: 'rgba(96,165,250,0.15)' },
+  completed: { bg: 'rgba(232,232,232,0.06)', color: 'var(--platinum-3)', border: 'rgba(232,232,232,0.1)' },
   cancelled: { bg: 'var(--black-5)',   color: 'var(--text-4)', border: 'var(--border)' },
 }
 
@@ -43,6 +43,17 @@ function StatusTag({ status }) {
       {status || 'pending'}
     </span>
   )
+}
+
+function StatusDot({ status }) {
+  const colors = {
+    pending: 'var(--amber)',
+    confirmed: 'var(--green)',
+    declined: 'var(--red)',
+    completed: 'var(--platinum-3)',
+    cancelled: 'var(--text-4)',
+  }
+  return <div style={{ width: 6, height: 6, borderRadius: '50%', background: colors[status] || colors.pending, flexShrink: 0 }} />
 }
 
 function Modal({ appt, onClose, onAction }) {
@@ -95,11 +106,150 @@ function Modal({ appt, onClose, onAction }) {
   )
 }
 
+// ─── Calendar View ────────────────────────────────────────────────────────────
+
+function CalendarView({ appts, weekStart, onSelectAppt }) {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+  const today = new Date()
+
+  const timeSlots = ['7 AM', '8 AM', '9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM']
+
+  // Try to parse appointment times and place them on the calendar
+  function getApptsForDay(day) {
+    return appts.filter(a => {
+      if (!a.created_at) return false
+      const created = new Date(a.created_at)
+      return isSameDay(created, day)
+    })
+  }
+
+  return (
+    <div style={{ background: 'var(--black-3)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+      {/* Day headers */}
+      <div style={{ display: 'grid', gridTemplateColumns: '60px repeat(7, 1fr)', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ padding: '12px 8px' }} />
+        {days.map(day => {
+          const isToday = isSameDay(day, today)
+          return (
+            <div key={day.toISOString()} style={{
+              padding: '12px 8px',
+              textAlign: 'center',
+              borderLeft: '1px solid var(--border)',
+              background: isToday ? 'rgba(232,232,232,0.03)' : 'transparent',
+            }}>
+              <div style={{ fontSize: 9, color: 'var(--text-4)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>
+                {format(day, 'EEE')}
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 20,
+                fontWeight: 300,
+                color: isToday ? 'var(--platinum)' : 'var(--text-3)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: isToday ? 'rgba(232,232,232,0.08)' : 'transparent',
+              }}>
+                {format(day, 'd')}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Time grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '60px repeat(7, 1fr)', minHeight: 500 }}>
+        {/* Time labels */}
+        <div>
+          {timeSlots.map(time => (
+            <div key={time} style={{
+              height: 48,
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'flex-end',
+              paddingRight: 8,
+              paddingTop: 2,
+              fontSize: 9,
+              color: 'var(--text-4)',
+              fontFamily: 'var(--font-mono)',
+              letterSpacing: '0.04em',
+              borderBottom: '1px solid var(--border)',
+            }}>
+              {time}
+            </div>
+          ))}
+        </div>
+
+        {/* Day columns */}
+        {days.map(day => {
+          const dayAppts = getApptsForDay(day)
+          const isToday = isSameDay(day, today)
+
+          return (
+            <div key={day.toISOString()} style={{
+              borderLeft: '1px solid var(--border)',
+              position: 'relative',
+              background: isToday ? 'rgba(232,232,232,0.015)' : 'transparent',
+            }}>
+              {timeSlots.map(time => (
+                <div key={time} style={{ height: 48, borderBottom: '1px solid var(--border)' }} />
+              ))}
+
+              {/* Appointments overlaid */}
+              {dayAppts.map((a, i) => {
+                const s = STATUS_STYLES[a.status] || STATUS_STYLES.pending
+                return (
+                  <div
+                    key={a.id}
+                    onClick={() => onSelectAppt(a)}
+                    style={{
+                      position: 'absolute',
+                      top: 48 * (i % timeSlots.length) + 4,
+                      left: 4,
+                      right: 4,
+                      padding: '6px 8px',
+                      background: s.bg,
+                      border: `1px solid ${s.border}`,
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      transition: 'transform 0.1s',
+                      zIndex: 2,
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+                      <StatusDot status={a.status} />
+                      <span style={{ fontSize: 10, fontWeight: 600, color: s.color, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {a.customer_name || 'Unknown'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 9, color: 'var(--text-4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {a.service_type || 'Service'} · {a.preferred_time_text || 'TBD'}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 export default function Appointments({ tenant }) {
   const [appts, setAppts] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [filter, setFilter] = useState('all')
+  const [view, setView] = useState('list')
+  const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }))
   const [msg, setMsg] = useState('')
 
   useEffect(() => { if (tenant?.id) load() }, [tenant])
@@ -120,18 +270,51 @@ export default function Appointments({ tenant }) {
   const filtered = appts.filter(a => filter === 'all' ? true : a.status === filter)
   const pending = appts.filter(a => a.status === 'pending').length
 
+  const weekLabel = `${format(weekStart, 'MMM d')} — ${format(addDays(weekStart, 6), 'MMM d, yyyy')}`
+
   return (
-    <div style={{ padding: 40, maxWidth: 960 }}>
+    <div style={{ padding: 40, maxWidth: 1100 }}>
       <PageTitle
         title="Appointments"
         sub={`${appts.length} total${pending > 0 ? ` · ${pending} pending` : ''}`}
         action={
-          <button onClick={load} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500, color: 'var(--text-4)', background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.12s', letterSpacing: '0.04em' }}
-            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-2)' }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-4)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-            Refresh
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* View toggle */}
+            <div style={{ display: 'flex', background: 'var(--black-4)', borderRadius: 8, padding: 3, border: '1px solid var(--border)' }}>
+              <button onClick={() => setView('list')} style={{
+                padding: '5px 12px', borderRadius: 6, fontSize: 10, fontWeight: 500,
+                background: view === 'list' ? 'var(--black-5)' : 'transparent',
+                color: view === 'list' ? 'var(--text)' : 'var(--text-4)',
+                border: view === 'list' ? '1px solid var(--border-2)' : '1px solid transparent',
+                cursor: 'pointer', letterSpacing: '0.04em',
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 4, verticalAlign: -1 }}>
+                  <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                List
+              </button>
+              <button onClick={() => setView('calendar')} style={{
+                padding: '5px 12px', borderRadius: 6, fontSize: 10, fontWeight: 500,
+                background: view === 'calendar' ? 'var(--black-5)' : 'transparent',
+                color: view === 'calendar' ? 'var(--text)' : 'var(--text-4)',
+                border: view === 'calendar' ? '1px solid var(--border-2)' : '1px solid transparent',
+                cursor: 'pointer', letterSpacing: '0.04em',
+              }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 4, verticalAlign: -1 }}>
+                  <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                Calendar
+              </button>
+            </div>
+
+            <button onClick={load} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500, color: 'var(--text-4)', background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.12s', letterSpacing: '0.04em' }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-2)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-4)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              Refresh
+            </button>
+          </div>
         }
       />
 
@@ -144,20 +327,61 @@ export default function Appointments({ tenant }) {
       {pending > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--amber-dim)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: 8, marginBottom: 16, fontSize: 11, color: 'var(--amber)', letterSpacing: '0.02em' }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-          <span><strong>{pending} appointment{pending > 1 ? 's' : ''}</strong> awaiting your response — click Review to confirm or decline</span>
+          <span><strong>{pending} appointment{pending > 1 ? 's' : ''}</strong> awaiting your response — click to confirm or decline</span>
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-        {['all', 'pending', 'confirmed', 'declined', 'completed'].map(f => (
-          <Pill key={f} label={f === 'pending' && pending > 0 ? `Pending (${pending})` : f} active={filter === f} onClick={() => setFilter(f)} />
-        ))}
-      </div>
+      {/* Calendar navigation — only show in calendar view */}
+      {view === 'calendar' && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <button onClick={() => setWeekStart(subWeeks(weekStart, 1))} style={{
+            padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500,
+            color: 'var(--text-4)', background: 'transparent', border: '1px solid var(--border)',
+            cursor: 'pointer', letterSpacing: '0.04em',
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            {' '}Prev
+          </button>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 300, color: 'var(--text)', letterSpacing: '0.02em' }}>
+            {weekLabel}
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }))} style={{
+              padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500,
+              color: 'var(--text-4)', background: 'transparent', border: '1px solid var(--border)',
+              cursor: 'pointer', letterSpacing: '0.04em',
+            }}>
+              Today
+            </button>
+            <button onClick={() => setWeekStart(addWeeks(weekStart, 1))} style={{
+              padding: '6px 14px', borderRadius: 8, fontSize: 11, fontWeight: 500,
+              color: 'var(--text-4)', background: 'transparent', border: '1px solid var(--border)',
+              cursor: 'pointer', letterSpacing: '0.04em',
+            }}>
+              Next{' '}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
 
-      <div style={{ background: 'var(--black-3)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-        {loading
-          ? <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><div className="spinner" /></div>
-          : filtered.length === 0
+      {/* Filter pills — only show in list view */}
+      {view === 'list' && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+          {['all', 'pending', 'confirmed', 'declined', 'completed'].map(f => (
+            <Pill key={f} label={f === 'pending' && pending > 0 ? `Pending (${pending})` : f} active={filter === f} onClick={() => setFilter(f)} />
+          ))}
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><div className="spinner" /></div>
+      ) : view === 'calendar' ? (
+        <CalendarView appts={appts} weekStart={weekStart} onSelectAppt={setSelected} />
+      ) : (
+        /* List view */
+        <div style={{ background: 'var(--black-3)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+          {filtered.length === 0
             ? <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-4)', fontSize: 11, letterSpacing: '0.04em' }}>No {filter === 'all' ? '' : filter} appointments</div>
             : (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -180,7 +404,7 @@ export default function Appointments({ tenant }) {
                       <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-3)' }}>{a.service_type || '—'}</td>
                       <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text)' }}>{a.preferred_time_text || '—'}</td>
                       <td style={{ padding: '12px 16px' }}>
-                        <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 99, background: a.customer_phone?.startsWith('web_') ? 'var(--green-dim)' : 'var(--blue-dim)', color: a.customer_phone?.startsWith('web_') ? 'var(--green)' : 'var(--blue)', border: '1px solid var(--border)' }}>
+                        <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 99, background: a.customer_phone?.startsWith('web_') ? 'var(--green-dim)' : 'rgba(232,232,232,0.06)', color: a.customer_phone?.startsWith('web_') ? 'var(--green)' : 'var(--platinum-3)', border: '1px solid var(--border)' }}>
                           {a.customer_phone?.startsWith('web_') ? 'chat' : 'sms/voice'}
                         </span>
                       </td>
@@ -198,8 +422,10 @@ export default function Appointments({ tenant }) {
                 </tbody>
               </table>
             )
-        }
-      </div>
+          }
+        </div>
+      )}
+
       {selected && <Modal appt={selected} onClose={() => setSelected(null)} onAction={handleAction} />}
     </div>
   )

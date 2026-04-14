@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import Landing from './pages/Landing'
 import Pricing from './pages/Pricing'
 import Terms from './pages/Terms'
+import Privacy from './pages/privacy/Privacy'
 import Refund from './pages/Refund'
 import Onboarding from './pages/Onboarding'
 import Admin from './pages/Admin'
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/auth" element={<Auth />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="/meta-callback" element={<MetaCallback />} />
         <Route path="/refund" element={<Refund />} />
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />

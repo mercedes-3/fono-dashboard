@@ -45,11 +45,59 @@ function Tag({ label, type }) {
   )
 }
 
+function TranscriptPanel({ transcript, recording_url }) {
+  if (!transcript && !recording_url) {
+    return (
+      <div style={{ padding: '16px 20px', fontSize: 11, color: 'var(--text-4)', fontStyle: 'italic' }}>
+        No transcript available for this call.
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)', background: 'rgba(232,232,232,0.015)' }}>
+      {recording_url && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Recording</div>
+          <audio controls src={recording_url} style={{ width: '100%', height: 32, borderRadius: 6 }} />
+        </div>
+      )}
+      {transcript && (
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Transcript</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {transcript.split('\n').filter(line => line.trim()).map((line, i) => {
+              const isCaller = line.startsWith('[Caller]')
+              const isAI = line.startsWith('[AI')
+              const cleanLine = line.replace(/^\[Caller\]:\s*/, '').replace(/^\[AI[^\]]*\]:\s*/, '')
+              return (
+                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <div style={{
+                    fontSize: 8, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+                    padding: '2px 6px', borderRadius: 4, flexShrink: 0, marginTop: 2,
+                    background: isCaller ? 'var(--blue-dim)' : 'var(--green-dim)',
+                    color: isCaller ? 'var(--blue)' : 'var(--green)',
+                    border: `1px solid ${isCaller ? 'rgba(96,165,250,0.15)' : 'rgba(74,222,128,0.15)'}`,
+                  }}>
+                    {isCaller ? 'Caller' : isAI ? 'AI' : 'System'}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-3)', lineHeight: 1.6 }}>{cleanLine}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Calls({ tenant }) {
   const [calls, setCalls] = useState([])
   const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState('calls')
+  const [expandedCall, setExpandedCall] = useState(null)
 
   useEffect(() => { if (tenant?.id) load() }, [tenant])
 
@@ -93,28 +141,48 @@ export default function Calls({ tenant }) {
             ? calls.length === 0
               ? <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-4)', fontSize: 11, letterSpacing: '0.04em' }}>No calls yet</div>
               : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                      {['From', 'Direction', 'Status', 'Duration', 'Date'].map(h => (
-                        <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 9, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {calls.map(c => (
-                      <tr key={c.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.1s' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(232,232,232,0.02)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        <td style={{ padding: '12px 16px', fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>{c.from_number || '—'}</td>
-                        <td style={{ padding: '12px 16px' }}><Tag label={c.direction} type={c.direction} /></td>
-                        <td style={{ padding: '12px 16px' }}><Tag label={c.status || '—'} type={c.status} /></td>
-                        <td style={{ padding: '12px 16px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-4)' }}>{c.duration_secs ? `${c.duration_secs}s` : '—'}</td>
-                        <td style={{ padding: '12px 16px', fontSize: 10, color: 'var(--text-4)' }}>{c.created_at ? formatDistanceToNow(new Date(c.created_at), { addSuffix: true }) : '—'}</td>
+                <div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                        {['', 'From', 'Direction', 'Status', 'Duration', 'Date'].map(h => (
+                          <th key={h || 'expand'} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 9, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', width: h === '' ? 32 : 'auto' }}>{h}</th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {calls.map(c => {
+                        const isExpanded = expandedCall === c.id
+                        const hasTranscript = !!(c.transcript || c.recording_url)
+                        return (
+                          <tr key={c.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.1s', cursor: hasTranscript ? 'pointer' : 'default' }}
+                            onClick={() => hasTranscript && setExpandedCall(isExpanded ? null : c.id)}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(232,232,232,0.02)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                            <td style={{ padding: '12px 8px 12px 16px', width: 32 }}>
+                              {hasTranscript && (
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>
+                                  <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                              )}
+                            </td>
+                            <td style={{ padding: '12px 16px', fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>{c.from_number || '—'}</td>
+                            <td style={{ padding: '12px 16px' }}><Tag label={c.direction} type={c.direction} /></td>
+                            <td style={{ padding: '12px 16px' }}><Tag label={c.status || '—'} type={c.status} /></td>
+                            <td style={{ padding: '12px 16px', fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-4)' }}>{c.duration_secs ? `${c.duration_secs}s` : '—'}</td>
+                            <td style={{ padding: '12px 16px', fontSize: 10, color: 'var(--text-4)' }}>{c.created_at ? formatDistanceToNow(new Date(c.created_at), { addSuffix: true }) : '—'}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                  {expandedCall && calls.find(c => c.id === expandedCall) && (
+                    <TranscriptPanel
+                      transcript={calls.find(c => c.id === expandedCall).transcript}
+                      recording_url={calls.find(c => c.id === expandedCall).recording_url}
+                    />
+                  )}
+                </div>
               )
             : messages.length === 0
               ? <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-4)', fontSize: 11, letterSpacing: '0.04em' }}>No messages yet</div>

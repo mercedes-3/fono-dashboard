@@ -98,11 +98,11 @@ export default function Landing() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Link to="/auth" style={{ fontSize: 12, color: 'var(--text-3)', padding: '7px 14px', textDecoration: 'none' }}>Sign In</Link>
-          <Link to="/pricing" style={{
+          <a href="https://buy.stripe.com/aFadRb2FW8or63v7bc7ss04" style={{
             fontSize: 12, fontWeight: 500, padding: '8px 18px', borderRadius: 8,
             background: 'var(--platinum)', color: 'var(--black)',
             textDecoration: 'none', letterSpacing: '0.02em',
-          }}>Get Started</Link>
+          }}>Get Started</a>
         </div>
       </nav>
 
@@ -149,7 +149,7 @@ export default function Landing() {
           </p>
 
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link to="/pricing" style={{
+            <a href="https://buy.stripe.com/aFadRb2FW8or63v7bc7ss04" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '12px 28px', borderRadius: 9, fontSize: 13, fontWeight: 500,
               background: 'var(--platinum)', color: 'var(--black)',
@@ -157,7 +157,7 @@ export default function Landing() {
               transition: 'opacity 0.15s',
             }}>
               Get Started
-            </Link>
+            </a>
             <a href="#demo" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '12px 28px', borderRadius: 9, fontSize: 13, fontWeight: 500,
@@ -314,14 +314,14 @@ export default function Landing() {
           <p style={{ fontSize: 13, color: 'var(--text-4)', marginBottom: 32, lineHeight: 1.7 }}>
             Every missed call is a missed job. Fono makes sure that never happens again.
           </p>
-          <Link to="/pricing" style={{
+          <a href="https://buy.stripe.com/aFadRb2FW8or63v7bc7ss04" style={{
             display: 'inline-flex', alignItems: 'center',
             padding: '13px 32px', borderRadius: 9, fontSize: 13, fontWeight: 500,
             background: 'var(--platinum)', color: 'var(--black)',
             textDecoration: 'none', letterSpacing: '0.02em',
           }}>
             Get Started Today
-          </Link>
+          </a>
         </div>
       </section>
 
@@ -342,8 +342,9 @@ export default function Landing() {
         </div>
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
           <Link to="/terms" style={{ fontSize: 10, color: 'var(--text-4)', textDecoration: 'none', letterSpacing: '0.04em' }}>Terms</Link>
+          <Link to="/privacy" style={{ fontSize: 10, color: 'var(--text-4)', textDecoration: 'none', letterSpacing: '0.04em' }}>Privacy</Link>
           <Link to="/refund" style={{ fontSize: 10, color: 'var(--text-4)', textDecoration: 'none', letterSpacing: '0.04em' }}>Refund Policy</Link>
-          <Link to="/pricing" style={{ fontSize: 10, color: 'var(--text-4)', textDecoration: 'none', letterSpacing: '0.04em' }}>Pricing</Link>
+          <a href="https://buy.stripe.com/aFadRb2FW8or63v7bc7ss04" style={{ fontSize: 10, color: 'var(--text-4)', textDecoration: 'none', letterSpacing: '0.04em' }}>Pricing</a>
         </div>
         <p style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.04em' }}>© 2026 Fono. All rights reserved.</p>
       </footer>

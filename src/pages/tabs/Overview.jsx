@@ -49,21 +49,27 @@ function StatusPill({ status }) {
 export default function Overview({ tenant }) {
   const [leads, setLeads] = useState([])
   const [appts, setAppts] = useState([])
-  const [calls, setCalls] = useState([])
+  const [leadCount, setLeadCount] = useState(0)
+  const [callCount, setCallCount] = useState(0)
+  const [apptCount, setApptCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => { if (tenant?.id) load() }, [tenant])
 
   async function load() {
     setLoading(true)
-    const [l, a, c] = await Promise.all([
+    const [l, a, lCount, cCount, aCount] = await Promise.all([
       supabase.from('leads').select('*').eq('tenant_id', tenant.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('appointment_requests').select('*').eq('tenant_id', tenant.id).eq('status', 'pending').order('created_at', { ascending: false }).limit(5),
-      supabase.from('call_logs').select('*').eq('tenant_id', tenant.id).order('created_at', { ascending: false }).limit(5),
+      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id),
+      supabase.from('call_logs').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id),
+      supabase.from('appointment_requests').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('status', 'pending'),
     ])
     setLeads(l.data || [])
     setAppts(a.data || [])
-    setCalls(c.data || [])
+    setLeadCount(lCount.count || 0)
+    setCallCount(cCount.count || 0)
+    setApptCount(aCount.count || 0)
     setLoading(false)
   }
 
@@ -93,9 +99,9 @@ export default function Overview({ tenant }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
-        <Stat label="Leads captured" value={loading ? '—' : leads.length} sub="Recent activity" color="var(--platinum-2)" />
-        <Stat label="Calls logged" value={loading ? '—' : calls.length} sub="Recent activity" color="var(--platinum-4)" />
-        <Stat label="Pending appointments" value={loading ? '—' : appts.length} sub="Awaiting confirmation" color={appts.length > 0 ? 'var(--amber)' : 'var(--platinum-4)'} />
+        <Stat label="Leads captured" value={loading ? '—' : leadCount} sub="Total leads" color="var(--platinum-2)" />
+        <Stat label="Calls logged" value={loading ? '—' : callCount} sub="Total calls" color="var(--platinum-4)" />
+        <Stat label="Pending appointments" value={loading ? '—' : apptCount} sub="Awaiting confirmation" color={apptCount > 0 ? 'var(--amber)' : 'var(--platinum-4)'} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -106,7 +112,7 @@ export default function Overview({ tenant }) {
               <div key={l.id} style={{ padding: '12px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.full_name || l.phone || 'Unknown'}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.02em' }}>{l.service_type || 'No service'} · {l.phone?.startsWith('web_') ? 'Chat' : 'SMS'}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.02em' }}>{l.service_type || 'No service'} · {l.source === 'voice' ? 'Voice' : l.phone?.startsWith('web_') ? 'Chat' : 'SMS'}</div>
                 </div>
                 <StatusPill status={l.intake_status} />
               </div>

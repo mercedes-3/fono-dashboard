@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { supabase } from '../../lib/supabase'
 
 function PageTitle({ title, sub }) {
   return (
@@ -32,6 +33,11 @@ export default function Settings({ tenant, user }) {
   const [color, setColor] = useState('#e8e8e8')
   const [greeting, setGreeting] = useState(`Hi! I'm the AI receptionist for ${tenant?.name || 'us'}. How can I help?`)
   const [copied, setCopied] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [exportMsg, setExportMsg] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteMsg, setDeleteMsg] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const snippet = tenant ? `<script 
   src="https://nosnibbbggmlzavfylcd.supabase.co/storage/v1/object/public/public-assets/widget.js"
@@ -46,6 +52,70 @@ export default function Settings({ tenant, user }) {
     navigator.clipboard.writeText(snippet)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function exportData() {
+    if (!tenant?.id) return
+    setExporting(true)
+    setExportMsg('')
+    try {
+      const [leads, messages, calls, appointments] = await Promise.all([
+        supabase.from('leads').select('*').eq('tenant_id', tenant.id),
+        supabase.from('messages').select('*').eq('tenant_id', tenant.id),
+        supabase.from('call_logs').select('*').eq('tenant_id', tenant.id),
+        supabase.from('appointment_requests').select('*').eq('tenant_id', tenant.id),
+      ])
+
+      const exportObj = {
+        exported_at: new Date().toISOString(),
+        tenant: {
+          id: tenant.id,
+          name: tenant.name,
+          business_type: tenant.business_type,
+          dispatch_phone: tenant.dispatch_phone,
+          twilio_number: tenant.twilio_number,
+        },
+        leads: leads.data || [],
+        messages: messages.data || [],
+        call_logs: calls.data || [],
+        appointment_requests: appointments.data || [],
+      }
+
+      const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `fono-data-export-${new Date().toISOString().slice(0, 10)}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      setExportMsg('Data exported successfully')
+      setTimeout(() => setExportMsg(''), 3000)
+    } catch (e) {
+      setExportMsg(`Export failed: ${e.message}`)
+    }
+    setExporting(false)
+  }
+
+  async function deleteAllData() {
+    if (!tenant?.id) return
+    setDeleting(true)
+    setDeleteMsg('')
+    try {
+      await supabase.from('messages').delete().eq('tenant_id', tenant.id)
+      await supabase.from('appointment_requests').delete().eq('tenant_id', tenant.id)
+      await supabase.from('call_logs').delete().eq('tenant_id', tenant.id)
+      await supabase.from('leads').delete().eq('tenant_id', tenant.id)
+
+      setDeleteMsg('All customer data has been deleted')
+      setConfirmDelete(false)
+      setTimeout(() => setDeleteMsg(''), 5000)
+    } catch (e) {
+      setDeleteMsg(`Delete failed: ${e.message}`)
+    }
+    setDeleting(false)
   }
 
   const ACCOUNT_FIELDS = [
@@ -113,6 +183,81 @@ export default function Settings({ tenant, user }) {
           <p style={{ fontSize: 10, color: 'var(--text-4)', lineHeight: 1.7, letterSpacing: '0.02em' }}>
             Paste before the closing &lt;/body&gt; tag. Works with WordPress, Wix, Squarespace, Webflow, and any HTML site.
           </p>
+        </div>
+      </Section>
+
+      <Section title="Data & Privacy" sub="Export or delete your data for GDPR/CCPA compliance">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Export Data</div>
+            <p style={{ fontSize: 11, color: 'var(--text-4)', lineHeight: 1.6, margin: 0 }}>
+              Download all your data including leads, messages, call logs, and appointments as a JSON file.
+            </p>
+            <button onClick={exportData} disabled={exporting} style={{
+              alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6,
+              padding: '9px 20px', borderRadius: 8, fontSize: 11, fontWeight: 500,
+              background: 'var(--platinum)', color: 'var(--black)',
+              border: 'none', cursor: 'pointer', letterSpacing: '0.04em',
+              opacity: exporting ? 0.6 : 1,
+            }}>
+              {exporting ? (
+                <><span className="spinner" style={{ width: 12, height: 12, borderTopColor: 'var(--black)' }} /> Exporting...</>
+              ) : (
+                <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export All Data</>
+              )}
+            </button>
+            {exportMsg && (
+              <div style={{ fontSize: 11, color: exportMsg.includes('failed') ? 'var(--red)' : 'var(--green)' }}>{exportMsg}</div>
+            )}
+          </div>
+
+          <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--red)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Delete All Data</div>
+            <p style={{ fontSize: 11, color: 'var(--text-4)', lineHeight: 1.6, margin: 0 }}>
+              Permanently delete all leads, messages, call logs, and appointments. This action cannot be undone. Your account and settings will remain intact.
+            </p>
+            {!confirmDelete ? (
+              <button onClick={() => setConfirmDelete(true)} style={{
+                alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 6,
+                padding: '9px 20px', borderRadius: 8, fontSize: 11, fontWeight: 500,
+                background: 'transparent', color: 'var(--red)',
+                border: '1px solid rgba(248,113,113,0.3)', cursor: 'pointer', letterSpacing: '0.04em',
+              }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                Delete All Customer Data
+              </button>
+            ) : (
+              <div style={{ padding: '14px 16px', background: 'var(--red-dim)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: 9 }}>
+                <div style={{ fontSize: 12, color: 'var(--red)', fontWeight: 500, marginBottom: 8 }}>Are you sure? This cannot be undone.</div>
+                <div style={{ fontSize: 11, color: 'var(--text-4)', marginBottom: 14, lineHeight: 1.6 }}>
+                  This will permanently delete all leads, messages, call logs, and appointment requests for your account.
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={deleteAllData} disabled={deleting} style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '8px 18px', borderRadius: 8, fontSize: 11, fontWeight: 500,
+                    background: 'var(--red)', color: 'white',
+                    border: 'none', cursor: 'pointer', letterSpacing: '0.04em',
+                    opacity: deleting ? 0.6 : 1,
+                  }}>
+                    {deleting ? 'Deleting...' : 'Yes, Delete Everything'}
+                  </button>
+                  <button onClick={() => setConfirmDelete(false)} style={{
+                    padding: '8px 18px', borderRadius: 8, fontSize: 11, fontWeight: 500,
+                    background: 'transparent', color: 'var(--text-4)',
+                    border: '1px solid var(--border)', cursor: 'pointer', letterSpacing: '0.04em',
+                  }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+            {deleteMsg && (
+              <div style={{ fontSize: 11, color: deleteMsg.includes('failed') ? 'var(--red)' : 'var(--green)' }}>{deleteMsg}</div>
+            )}
+          </div>
         </div>
       </Section>
     </div>

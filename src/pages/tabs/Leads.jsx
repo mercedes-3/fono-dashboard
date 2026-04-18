@@ -64,6 +64,34 @@ function SourceTag({ lead }) {
   )
 }
 
+function ScoreBar({ score }) {
+  const s = score || 0
+  const color = s >= 70 ? 'var(--green)' : s >= 40 ? 'var(--amber)' : 'var(--text-4)'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ width: 32, height: 4, borderRadius: 99, background: 'var(--black-5)', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${s}%`, borderRadius: 99, background: color }} />
+      </div>
+      <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color }}>{s}</span>
+    </div>
+  )
+}
+
+function ScoreLabel({ score }) {
+  const s = score || 0
+  const color = s >= 70 ? 'var(--green)' : s >= 40 ? 'var(--amber)' : 'var(--text-4)'
+  const label = s >= 70 ? 'Hot' : s >= 40 ? 'Warm' : 'Cold'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ width: 48, height: 5, borderRadius: 99, background: 'var(--black-5)', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${s}%`, borderRadius: 99, background: color }} />
+      </div>
+      <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color }}>{s}/100</span>
+      <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 99, background: s >= 70 ? 'var(--green-dim)' : s >= 40 ? 'var(--amber-dim)' : 'var(--black-5)', color, border: `1px solid ${s >= 70 ? 'rgba(74,222,128,0.15)' : s >= 40 ? 'rgba(251,191,36,0.15)' : 'var(--border)'}` }}>{label}</span>
+    </div>
+  )
+}
+
 // ─── Customer Detail Panel ────────────────────────────────────────────────────
 
 function CustomerDetail({ lead, onClose, onUpdate, messages }) {
@@ -144,6 +172,12 @@ function CustomerDetail({ lead, onClose, onUpdate, messages }) {
           }}>
             ✕
           </button>
+        </div>
+
+        {/* Lead Score */}
+        <div style={{ padding: '16px 28px', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ fontSize: 9, color: 'var(--text-4)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Lead Score</div>
+          <ScoreLabel score={lead.lead_score} />
         </div>
 
         {/* Pipeline Stage */}
@@ -328,6 +362,7 @@ export default function Leads({ tenant }) {
     if (filter === 'quoted') return l.pipeline_stage === 'quoted'
     if (filter === 'won') return l.pipeline_stage === 'won'
     if (filter === 'lost') return l.pipeline_stage === 'lost'
+    if (filter === 'hot') return (l.lead_score || 0) >= 70
     return true
   })
 
@@ -337,11 +372,13 @@ export default function Leads({ tenant }) {
     return acc
   }, {})
 
+  const hotCount = leads.filter(l => (l.lead_score || 0) >= 70).length
+
   return (
     <div style={{ padding: 40, maxWidth: 1100 }}>
       <PageTitle
         title="Leads"
-        sub={`${leads.length} total · ${stageCounts.won || 0} won · ${stageCounts.new || 0} new`}
+        sub={`${leads.length} total · ${stageCounts.won || 0} won · ${stageCounts.new || 0} new · ${hotCount} hot`}
         action={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {/* View toggle */}
@@ -388,6 +425,8 @@ export default function Leads({ tenant }) {
           {[['sms', 'SMS'], ['voice', 'Voice'], ['chat', 'Chat']].map(([val, label]) => (
             <Pill key={val} label={label} active={filter === val} onClick={() => setFilter(val)} />
           ))}
+          <div style={{ width: 1, height: 24, background: 'var(--border)', alignSelf: 'center', margin: '0 4px' }} />
+          <Pill label="Hot Leads" active={filter === 'hot'} onClick={() => setFilter('hot')} count={hotCount} />
         </div>
       )}
 
@@ -435,7 +474,10 @@ export default function Leads({ tenant }) {
                       onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--border-2)'}
                       onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
                     >
-                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>{l.full_name || 'Unknown'}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{l.full_name || 'Unknown'}</div>
+                        <ScoreBar score={l.lead_score} />
+                      </div>
                       <div style={{ fontSize: 10, color: 'var(--text-4)', marginBottom: 6 }}>{l.service_type || 'No service specified'}</div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <SourceTag lead={l} />
@@ -466,7 +508,7 @@ export default function Leads({ tenant }) {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                    {['Name', 'Phone', 'Service', 'Source', 'Stage', 'Date', ''].map(h => (
+                    {['Name', 'Phone', 'Service', 'Source', 'Score', 'Stage', 'Date', ''].map(h => (
                       <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 9, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{h}</th>
                     ))}
                   </tr>
@@ -492,6 +534,7 @@ export default function Leads({ tenant }) {
                       <td style={{ padding: '12px 16px', fontSize: 11, color: 'var(--text-4)', fontFamily: 'var(--font-mono)' }}>{lead.phone?.startsWith('web_') ? 'Web chat' : lead.phone || '—'}</td>
                       <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-3)' }}>{lead.service_type || '—'}</td>
                       <td style={{ padding: '12px 16px' }}><SourceTag lead={lead} /></td>
+                      <td style={{ padding: '12px 16px' }}><ScoreBar score={lead.lead_score} /></td>
                       <td style={{ padding: '12px 16px' }}><PipelineTag stage={lead.pipeline_stage || 'new'} /></td>
                       <td style={{ padding: '12px 16px', fontSize: 10, color: 'var(--text-4)' }}>{lead.created_at ? formatDistanceToNow(new Date(lead.created_at), { addSuffix: true }) : '—'}</td>
                       <td style={{ padding: '12px 16px' }}>

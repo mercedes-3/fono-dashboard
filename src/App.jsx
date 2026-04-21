@@ -10,6 +10,7 @@ import Privacy from './pages/privacy/Privacy'
 import Refund from './pages/Refund'
 import Onboarding from './pages/Onboarding'
 import Admin from './pages/Admin'
+import GoogleCallback from './pages/GoogleCallback'
 import MetaCallback from './pages/MetaCallback'
 
 function ProtectedRoute({ children }) {
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/google-callback" element={<GoogleCallback />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

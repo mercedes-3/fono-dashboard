@@ -92,15 +92,30 @@ function ScoreLabel({ score }) {
   )
 }
 
+function ChannelBadge({ type }) {
+  const styles = {
+    voice: { label: 'Voice', bg: 'rgba(168,85,247,0.1)', color: '#a855f7', border: 'rgba(168,85,247,0.2)' },
+    sms: { label: 'SMS', bg: 'var(--blue-dim)', color: 'var(--blue)', border: 'rgba(96,165,250,0.15)' },
+    chat: { label: 'Chat', bg: 'var(--green-dim)', color: 'var(--green)', border: 'rgba(74,222,128,0.15)' },
+  }
+  const s = styles[type] || styles.sms
+  return (
+    <span style={{ fontSize: 7, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '2px 5px', borderRadius: 4, background: s.bg, color: s.color, border: `1px solid ${s.border}` }}>
+      {s.label}
+    </span>
+  )
+}
+
 // ─── Customer Detail Panel ────────────────────────────────────────────────────
 
-function CustomerDetail({ lead, onClose, onUpdate, messages }) {
+function CustomerDetail({ lead, onClose, onUpdate, messages, callLogs }) {
   const [notes, setNotes] = useState(lead.notes || '')
   const [tagInput, setTagInput] = useState('')
   const [tags, setTags] = useState(lead.tags || [])
   const [stage, setStage] = useState(lead.pipeline_stage || 'new')
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
+  const [historyTab, setHistoryTab] = useState('all')
 
   useEffect(() => {
     setNotes(lead.notes || '')
@@ -138,6 +153,59 @@ function CustomerDetail({ lead, onClose, onUpdate, messages }) {
     setTags(tags.filter(tag => tag !== t))
   }
 
+  // Build unified timeline from messages + call transcripts
+  const timeline = []
+
+  // Add SMS/chat messages
+  messages.forEach(m => {
+    timeline.push({
+      type: m.from_number?.startsWith('web_') || m.to_number?.startsWith('web_') ? 'chat' : 'sms',
+      direction: m.direction,
+      body: m.body,
+      timestamp: m.created_at,
+      sender: m.direction === 'inbound' ? 'Customer' : 'Fono AI',
+    })
+  })
+
+  // Add call transcripts as individual lines
+  callLogs.forEach(call => {
+    if (call.transcript) {
+      const lines = call.transcript.split('\n').filter(l => l.trim())
+      lines.forEach(line => {
+        const isCaller = line.startsWith('[Caller]')
+        const isAI = line.startsWith('[AI')
+        const isSystem = line.startsWith('[System]')
+        const cleanLine = line.replace(/^\[Caller\]:\s*/, '').replace(/^\[AI[^\]]*\]:\s*/, '').replace(/^\[System\]:\s*/, '')
+        timeline.push({
+          type: 'voice',
+          direction: isCaller ? 'inbound' : 'outbound',
+          body: cleanLine,
+          timestamp: call.created_at,
+          sender: isCaller ? 'Customer' : isSystem ? 'System' : 'Fono AI',
+          isSystem,
+        })
+      })
+    } else {
+      timeline.push({
+        type: 'voice',
+        direction: 'inbound',
+        body: `Call from ${call.from_number || 'unknown'} (${call.duration_secs ? call.duration_secs + 's' : 'no duration'})`,
+        timestamp: call.created_at,
+        sender: 'System',
+        isSystem: true,
+      })
+    }
+  })
+
+  // Sort by timestamp
+  timeline.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+
+  const filteredTimeline = historyTab === 'all' ? timeline
+    : timeline.filter(t => t.type === historyTab)
+
+  const smsMsgCount = messages.length
+  const callCount = callLogs.length
+
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 999,
@@ -159,8 +227,15 @@ function CustomerDetail({ lead, onClose, onUpdate, messages }) {
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 300, color: 'var(--text)', marginBottom: 4 }}>
               {lead.full_name || 'Unknown'}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-4)', fontFamily: 'var(--font-mono)' }}>
-              {lead.phone?.startsWith('web_') ? 'Web chat' : lead.phone || 'No phone'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 11, color: 'var(--text-4)', fontFamily: 'var(--font-mono)' }}>
+                {lead.phone?.startsWith('web_') ? 'Web chat' : lead.phone || 'No phone'}
+              </span>
+              {lead.sentiment && lead.sentiment !== 'neutral' && (
+                <span style={{ fontSize: 8, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '2px 6px', borderRadius: 4, background: lead.sentiment === 'urgent' ? 'var(--red-dim)' : lead.sentiment === 'frustrated' ? 'var(--amber-dim)' : lead.sentiment === 'happy' ? 'var(--green-dim)' : 'var(--blue-dim)', color: lead.sentiment === 'urgent' ? 'var(--red)' : lead.sentiment === 'frustrated' ? 'var(--amber)' : lead.sentiment === 'happy' ? 'var(--green)' : 'var(--blue)', border: `1px solid ${lead.sentiment === 'urgent' ? 'rgba(248,113,113,0.15)' : lead.sentiment === 'frustrated' ? 'rgba(251,191,36,0.15)' : lead.sentiment === 'happy' ? 'rgba(74,222,128,0.15)' : 'rgba(96,165,250,0.15)'}` }}>
+                  {lead.sentiment}
+                </span>
+              )}
             </div>
           </div>
           <button onClick={onClose} style={{
@@ -271,29 +346,51 @@ function CustomerDetail({ lead, onClose, onUpdate, messages }) {
           />
         </div>
 
-        {/* Conversation History */}
+        {/* Unified Conversation History */}
         <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--border)', flex: 1 }}>
-          <div style={{ fontSize: 9, color: 'var(--text-4)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Conversation History</div>
-          {messages.length === 0 ? (
-            <div style={{ fontSize: 11, color: 'var(--text-4)', padding: '12px 0' }}>No messages yet</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div style={{ fontSize: 9, color: 'var(--text-4)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Conversation History</div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {[
+                ['all', `All (${timeline.length})`],
+                ['sms', `SMS (${smsMsgCount})`],
+                ['voice', `Calls (${callCount})`],
+              ].map(([val, label]) => (
+                <button key={val} onClick={() => setHistoryTab(val)} style={{
+                  padding: '3px 8px', borderRadius: 4, fontSize: 8, fontWeight: 600,
+                  letterSpacing: '0.04em', textTransform: 'uppercase',
+                  background: historyTab === val ? 'rgba(232,232,232,0.08)' : 'transparent',
+                  color: historyTab === val ? 'var(--text)' : 'var(--text-4)',
+                  border: `1px solid ${historyTab === val ? 'rgba(232,232,232,0.16)' : 'var(--border)'}`,
+                  cursor: 'pointer',
+                }}>{label}</button>
+              ))}
+            </div>
+          </div>
+          {filteredTimeline.length === 0 ? (
+            <div style={{ fontSize: 11, color: 'var(--text-4)', padding: '12px 0' }}>No activity yet</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 300, overflowY: 'auto' }}>
-              {messages.map((m, i) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 400, overflowY: 'auto' }}>
+              {filteredTimeline.map((item, i) => (
                 <div key={i} style={{
                   padding: '10px 12px',
-                  background: m.direction === 'inbound' ? 'var(--black-4)' : 'rgba(232,232,232,0.04)',
+                  background: item.isSystem ? 'rgba(232,232,232,0.02)' : item.direction === 'inbound' ? 'var(--black-4)' : 'rgba(232,232,232,0.04)',
                   borderRadius: 8,
                   border: '1px solid var(--border)',
+                  opacity: item.isSystem ? 0.6 : 1,
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 9, fontWeight: 600, color: m.direction === 'inbound' ? 'var(--amber)' : 'var(--green)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                      {m.direction === 'inbound' ? 'Customer' : 'Fono AI'}
-                    </span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <ChannelBadge type={item.type} />
+                      <span style={{ fontSize: 9, fontWeight: 600, color: item.direction === 'inbound' ? 'var(--amber)' : 'var(--green)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                        {item.sender}
+                      </span>
+                    </div>
                     <span style={{ fontSize: 9, color: 'var(--text-4)', fontFamily: 'var(--font-mono)' }}>
-                      {m.created_at ? format(new Date(m.created_at), 'h:mm a') : ''}
+                      {item.timestamp ? format(new Date(item.timestamp), 'MMM d h:mm a') : ''}
                     </span>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>{m.body}</div>
+                  <div style={{ fontSize: 12, color: item.isSystem ? 'var(--text-4)' : 'var(--text)', lineHeight: 1.5, fontStyle: item.isSystem ? 'italic' : 'normal' }}>{item.body}</div>
                 </div>
               ))}
             </div>
@@ -327,6 +424,7 @@ export default function Leads({ tenant }) {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
   const [messages, setMessages] = useState([])
+  const [callLogs, setCallLogs] = useState([])
   const [filter, setFilter] = useState('all')
   const [view, setView] = useState('list')
 
@@ -341,16 +439,18 @@ export default function Leads({ tenant }) {
 
   async function openDetail(lead) {
     setSelected(lead)
-    const { data } = await supabase.from('messages')
-      .select('*')
-      .eq('lead_id', lead.id)
-      .order('created_at', { ascending: true })
-    setMessages(data || [])
+    const [msgRes, callRes] = await Promise.all([
+      supabase.from('messages').select('*').eq('lead_id', lead.id).order('created_at', { ascending: true }),
+      supabase.from('call_logs').select('*').eq('lead_id', lead.id).order('created_at', { ascending: true }),
+    ])
+    setMessages(msgRes.data || [])
+    setCallLogs(callRes.data || [])
   }
 
   function closeDetail() {
     setSelected(null)
     setMessages([])
+    setCallLogs([])
   }
 
   const filtered = leads.filter(l => {
@@ -381,7 +481,6 @@ export default function Leads({ tenant }) {
         sub={`${leads.length} total · ${stageCounts.won || 0} won · ${stageCounts.new || 0} new · ${hotCount} hot`}
         action={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* View toggle */}
             <div style={{ display: 'flex', background: 'var(--black-4)', borderRadius: 8, padding: 3, border: '1px solid var(--border)' }}>
               <button onClick={() => setView('list')} style={{
                 padding: '5px 12px', borderRadius: 6, fontSize: 10, fontWeight: 500,
@@ -433,7 +532,6 @@ export default function Leads({ tenant }) {
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}><div className="spinner" /></div>
       ) : view === 'pipeline' ? (
-        /* Pipeline / Kanban View */
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${PIPELINE_STAGES.length}, 1fr)`, gap: 10, minHeight: 400 }}>
           {PIPELINE_STAGES.map(stage => {
             const stageLeads = leads.filter(l => (l.pipeline_stage || 'new') === stage.value)
@@ -445,7 +543,6 @@ export default function Leads({ tenant }) {
                 display: 'flex', flexDirection: 'column',
                 overflow: 'hidden',
               }}>
-                {/* Column header */}
                 <div style={{
                   padding: '12px 14px',
                   borderBottom: '1px solid var(--border)',
@@ -458,7 +555,6 @@ export default function Leads({ tenant }) {
                   <span style={{ fontSize: 10, color: 'var(--text-4)', fontFamily: 'var(--font-mono)' }}>{stageLeads.length}</span>
                 </div>
 
-                {/* Cards */}
                 <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 6, flex: 1, overflowY: 'auto' }}>
                   {stageLeads.length === 0 ? (
                     <div style={{ padding: '20px 8px', textAlign: 'center', fontSize: 10, color: 'var(--text-4)' }}>No leads</div>
@@ -500,7 +596,6 @@ export default function Leads({ tenant }) {
           })}
         </div>
       ) : (
-        /* List View */
         <div style={{ background: 'var(--black-3)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
           {filtered.length === 0
             ? <div style={{ padding: '48px 20px', textAlign: 'center', color: 'var(--text-4)', fontSize: 11, letterSpacing: '0.04em' }}>No leads found</div>
@@ -553,6 +648,7 @@ export default function Leads({ tenant }) {
         <CustomerDetail
           lead={selected}
           messages={messages}
+          callLogs={callLogs}
           onClose={closeDetail}
           onUpdate={() => { load(); closeDetail() }}
         />

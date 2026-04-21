@@ -60,8 +60,8 @@ export default function Setup({ tenant, reload }) {
   async function save() {
     setSaving(true); setSaveMsg('')
     const { error } = await supabase.from('tenants').update({ name: bizName, business_type: bizType, dispatch_phone: dispatch, ai_system_prompt: prompt }).eq('id', tenant.id)
-    if (error) setSaveMsg(`❌ ${error.message}`)
-    else { setSaveMsg('✅ Saved'); reload() }
+    if (error) setSaveMsg(`Error: ${error.message}`)
+    else { setSaveMsg('Saved'); reload() }
     setSaving(false)
   }
 
@@ -76,11 +76,15 @@ export default function Setup({ tenant, reload }) {
         body: JSON.stringify({ tenant_id: tenant.id, area_code: areaCode })
       })
       const data = await res.json()
-      if (data.success) { setProvMsg(`✅ ${data.phone_number}`); reload() }
-      else setProvMsg(`❌ ${data.error || 'Failed'}`)
-    } catch (e) { setProvMsg(`❌ ${e.message}`) }
+      if (data.success) { setProvMsg(`Done: ${data.phone_number}`); reload() }
+      else setProvMsg(`Error: ${data.error || 'Failed'}`)
+    } catch (e) { setProvMsg(`Error: ${e.message}`) }
     setProvisioning(false)
   }
+
+  const googleClientId = '564345892714-s3bcso0gii3rejptsgnq2qs17g7jpmoj.apps.googleusercontent.com'
+  const googleRedirectUri = encodeURIComponent(window.location.origin + '/google-callback')
+  const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${googleRedirectUri}&response_type=code&scope=${encodeURIComponent('https://www.googleapis.com/auth/calendar')}&access_type=offline&prompt=consent&state=${tenant?.id}`
 
   if (!tenant) return <div style={{ padding: 40 }}><div style={{ color: 'var(--text-4)', fontSize: 12 }}>No tenant found.</div></div>
 
@@ -131,7 +135,7 @@ export default function Setup({ tenant, reload }) {
           </Field>
 
           {saveMsg && (
-            <div style={{ padding: '8px 12px', borderRadius: 7, fontSize: 12, background: saveMsg.startsWith('✅') ? 'var(--green-dim)' : 'var(--red-dim)', color: saveMsg.startsWith('✅') ? 'var(--green)' : 'var(--red)', border: `1px solid ${saveMsg.startsWith('✅') ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)'}` }}>
+            <div style={{ padding: '8px 12px', borderRadius: 7, fontSize: 12, background: saveMsg === 'Saved' ? 'var(--green-dim)' : 'var(--red-dim)', color: saveMsg === 'Saved' ? 'var(--green)' : 'var(--red)', border: `1px solid ${saveMsg === 'Saved' ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)'}` }}>
               {saveMsg}
             </div>
           )}
@@ -165,7 +169,7 @@ export default function Setup({ tenant, reload }) {
                 </button>
               </div>
               {provMsg && (
-                <div style={{ padding: '8px 12px', borderRadius: 7, fontSize: 12, background: provMsg.startsWith('✅') ? 'var(--green-dim)' : 'var(--red-dim)', color: provMsg.startsWith('✅') ? 'var(--green)' : 'var(--red)', border: `1px solid ${provMsg.startsWith('✅') ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)'}` }}>
+                <div style={{ padding: '8px 12px', borderRadius: 7, fontSize: 12, background: provMsg.startsWith('Done') ? 'var(--green-dim)' : 'var(--red-dim)', color: provMsg.startsWith('Done') ? 'var(--green)' : 'var(--red)', border: `1px solid ${provMsg.startsWith('Done') ? 'rgba(74,222,128,0.15)' : 'rgba(248,113,113,0.15)'}` }}>
                   {provMsg}
                 </div>
               )}
@@ -173,6 +177,39 @@ export default function Setup({ tenant, reload }) {
             </div>
           )
         }
+      </Section>
+
+      {/* Google Calendar */}
+      <Section title="Google Calendar" sub="Sync confirmed appointments directly to your calendar">
+        {tenant.google_calendar_connected ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', background: 'var(--green-dim)', borderRadius: 9, border: '1px solid rgba(74,222,128,0.15)' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', flexShrink: 0 }} className="dot-live" />
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--green)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>Connected</div>
+              <div style={{ fontSize: 12, color: 'var(--text)' }}>Confirmed appointments sync to your Google Calendar automatically</div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ padding: '14px 16px', background: 'var(--black-4)', border: '1px solid var(--border)', borderRadius: 9 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>How it works</div>
+              <div style={{ fontSize: 11, color: 'var(--text-4)', lineHeight: 1.8 }}>
+                Connect your Google Calendar and every confirmed appointment will automatically appear on your calendar with customer name, service type, address, and issue details.
+              </div>
+            </div>
+
+            <a
+              href={googleOAuthUrl}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#4285F4', color: 'white', textDecoration: 'none', letterSpacing: '0.02em', alignSelf: 'flex-start' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg>
+              Connect Google Calendar
+            </a>
+            <p style={{ fontSize: 10, color: 'var(--text-4)', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+              You will be asked to grant calendar access. Fono only creates events for confirmed appointments.
+            </p>
+          </div>
+        )}
       </Section>
 
       {/* Meta / Facebook */}
@@ -195,7 +232,7 @@ export default function Setup({ tenant, reload }) {
             </div>
 
             <a
-             href={`https://www.facebook.com/v18.0/dialog/oauth?client_id=1636156444385583&redirect_uri=${encodeURIComponent(window.location.origin + '/meta-callback')}&scope=pages_show_list,pages_read_engagement,leads_retrieval&state=${tenant?.id}`}
+              href={`https://www.facebook.com/v18.0/dialog/oauth?client_id=1636156444385583&redirect_uri=${encodeURIComponent(window.location.origin + '/meta-callback')}&scope=pages_show_list,pages_read_engagement,leads_retrieval&state=${tenant?.id}`}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, fontSize: 12, fontWeight: 500, background: '#1877F2', color: 'white', textDecoration: 'none', letterSpacing: '0.02em', alignSelf: 'flex-start' }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>

@@ -325,29 +325,47 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
+     {/* Footer */}
       <footer style={{
         borderTop: '1px solid var(--border)',
-        padding: '24px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 12,
+        padding: '40px 24px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 20, height: 20, background: 'var(--platinum)', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--black)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.09 6.09l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
-            </svg>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 32, marginBottom: 32 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 20, height: 20, background: 'var(--platinum)', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--black)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.09 6.09l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
+                  </svg>
+                </div>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--platinum-3)', letterSpacing: '0.04em' }}>fono</span>
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--text-4)', lineHeight: 1.7, maxWidth: 280 }}>
+                Fono is an AI-powered receptionist platform built for contractors. We answer every call, qualify every lead, and book appointments automatically so you never miss a job.
+              </p>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Company</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-4)' }}>3ON3 LLC</span>
+                <span style={{ fontSize: 11, color: 'var(--text-4)' }}>El Paso, TX</span>
+                <a href="mailto:mercedes@3on3scalez.com" style={{ fontSize: 11, color: 'var(--text-4)', textDecoration: 'none' }}>mercedes@3on3scalez.com</a>
+                <a href="tel:+12106720944" style={{ fontSize: 11, color: 'var(--text-4)', textDecoration: 'none' }}>(210) 672-0944</a>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Legal</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <Link to="/terms" style={{ fontSize: 11, color: 'var(--text-4)', textDecoration: 'none' }}>Terms of Service</Link>
+                <Link to="/privacy" style={{ fontSize: 11, color: 'var(--text-4)', textDecoration: 'none' }}>Privacy Policy</Link>
+                <Link to="/refund" style={{ fontSize: 11, color: 'var(--text-4)', textDecoration: 'none' }}>Refund Policy</Link>
+              </div>
+            </div>
           </div>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--platinum-3)', letterSpacing: '0.04em' }}>fono</span>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <p style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.04em' }}>© 2026 3ON3 LLC. All rights reserved.</p>
+            <a href="https://buy.stripe.com/aFadRb2FW8or63v7bc7ss04" style={{ fontSize: 10, color: 'var(--text-4)', textDecoration: 'none', letterSpacing: '0.04em' }}>Pricing</a>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <Link to="/terms" style={{ fontSize: 10, color: 'var(--text-4)', textDecoration: 'none', letterSpacing: '0.04em' }}>Terms</Link>
-          <Link to="/privacy" style={{ fontSize: 10, color: 'var(--text-4)', textDecoration: 'none', letterSpacing: '0.04em' }}>Privacy</Link>
-          <Link to="/refund" style={{ fontSize: 10, color: 'var(--text-4)', textDecoration: 'none', letterSpacing: '0.04em' }}>Refund Policy</Link>
-          <a href="https://buy.stripe.com/aFadRb2FW8or63v7bc7ss04" style={{ fontSize: 10, color: 'var(--text-4)', textDecoration: 'none', letterSpacing: '0.04em' }}>Pricing</a>
-        </div>
-        <p style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.04em' }}>© 2026 Fono. All rights reserved.</p>
       </footer>
-    </div>
-  )
-}

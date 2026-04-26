@@ -261,10 +261,46 @@ export default function Appointments({ tenant }) {
     setLoading(false)
   }
 
-  async function handleAction(id, status) {
+ async function handleAction(id, status) {
     const { error } = await supabase.from('appointment_requests').update({ status }).eq('id', id)
-    if (error) { setMsg(`❌ ${error.message}`) }
-    else { setMsg(`✅ Appointment ${status}`); setTimeout(() => setMsg(''), 3000); load() }
+    if (error) { setMsg(`❌ ${error.message}`); return }
+
+    // Sync to Google Calendar if confirmed
+    if (status === 'confirmed') {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        await fetch('https://nosnibbbggmlzavfylcd.supabase.co/functions/v1/sync-calendar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+          body: JSON.stringify({ tenant_id: tenant.id, appointment_id: id }),
+        })
+      } catch (e) { console.error('Calendar sync failed:', e) }
+    }
+
+    // Notify customer via SMS
+    const appt = appts.find(a => a.id === id)
+    if (appt?.customer_phone && !appt.customer_phone.startsWith('web_') && tenant.twilio_number) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        const customerMsg = status === 'confirmed'
+          ? `Your appointment is confirmed for ${appt.preferred_time_text}. We look forward to helping you!`
+          : `We are unavailable for ${appt.preferred_time_text}. Please reply with another day/time that works.`
+
+        await supabase.from('messages').insert({
+          tenant_id: tenant.id,
+          lead_id: appt.lead_id,
+          from_number: tenant.twilio_number,
+          to_number: appt.customer_phone,
+          direction: 'outbound',
+          body: customerMsg,
+          status: 'queued',
+        })
+      } catch (e) { console.error('Customer notification failed:', e) }
+    }
+
+    setMsg(`✅ Appointment ${status}${status === 'confirmed' ? ' · synced to calendar · customer notified' : ' · customer notified'}`)
+    setTimeout(() => setMsg(''), 4000)
+    load()
   }
 
   const filtered = appts.filter(a => filter === 'all' ? true : a.status === filter)

@@ -12,13 +12,20 @@ import Setup from './tabs/Setup'
 import Settings from './tabs/Settings'
 
 const NAV = [
-  { path: '', label: 'Overview', icon: 'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z' },
-  { path: 'leads', label: 'Leads', icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75' },
-  { path: 'calls', label: 'Calls', icon: 'M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72 19.003 19.003 0 00.7 2.81 2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.09 6.09l1.27-1.27a2 2 0 012.11-.45 19.003 19.003 0 002.81.7A2 2 0 0122 16.92z' },
-  { path: 'appointments', label: 'Appointments', icon: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z' },
-  { path: 'setup', label: 'Setup', icon: 'M12 15a3 3 0 100-6 3 3 0 000 6z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z' },
-  { path: 'settings', label: 'Settings', icon: 'M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z M12 8a4 4 0 100 8 4 4 0 000-8z' },
+  { path: '', label: 'Overview', icon: 'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z', plans: ['starter', 'pro', 'founders', 'partner'] },
+  { path: 'leads', label: 'Leads', icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75', plans: ['starter', 'pro', 'founders', 'partner'] },
+  { path: 'calls', label: 'Calls', icon: 'M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 1h3a2 2 0 012 1.72 19.003 19.003 0 00.7 2.81 2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.09 6.09l1.27-1.27a2 2 0 012.11-.45 19.003 19.003 0 002.81.7A2 2 0 0122 16.92z', plans: ['starter', 'pro', 'founders', 'partner'] },
+  { path: 'appointments', label: 'Appointments', icon: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z', plans: ['pro', 'founders', 'partner'] },
+  { path: 'setup', label: 'Setup', icon: 'M12 15a3 3 0 100-6 3 3 0 000 6z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z', plans: ['starter', 'pro', 'founders', 'partner'] },
+  { path: 'settings', label: 'Settings', icon: 'M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z M12 8a4 4 0 100 8 4 4 0 000-8z', plans: ['starter', 'pro', 'founders', 'partner'] },
 ]
+
+const PLAN_LABELS = {
+  starter: { label: 'Starter', color: 'var(--text-4)' },
+  pro: { label: 'Pro', color: 'var(--platinum)' },
+  founders: { label: 'Founders', color: 'var(--green)' },
+  partner: { label: 'Partner', color: 'var(--amber)' },
+}
 
 function NavIcon({ d }) {
   return (
@@ -28,10 +35,43 @@ function NavIcon({ d }) {
   )
 }
 
+function UpgradeGate({ plan }) {
+  return (
+    <div style={{ padding: 40, maxWidth: 500 }}>
+      <div style={{ background: 'var(--black-3)', border: '1px solid var(--border)', borderRadius: 12, padding: '48px 32px', textAlign: 'center' }}>
+        <div style={{ fontSize: 32, marginBottom: 16 }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--platinum)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+        </div>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 300, color: 'var(--text)', marginBottom: 8 }}>
+          Upgrade to Pro
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--text-4)', lineHeight: 1.7, marginBottom: 24, maxWidth: 320, margin: '0 auto 24px' }}>
+          This feature is available on the Pro plan. Upgrade to unlock the full dashboard, appointments, analytics, calendar sync, and more.
+        </p>
+        <a href="/pricing" style={{
+          display: 'inline-flex', alignItems: 'center',
+          padding: '10px 24px', borderRadius: 8, fontSize: 12, fontWeight: 500,
+          background: 'var(--platinum)', color: 'var(--black)',
+          textDecoration: 'none', letterSpacing: '0.02em',
+        }}>
+          View Plans
+        </a>
+      </div>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const navigate = useNavigate()
   const { tenant, user, loading, reload } = useTenant()
   const { notifications, dismiss } = useRealtimeNotifications(tenant?.id)
+
+  const plan = tenant?.plan || 'starter'
+  const planInfo = PLAN_LABELS[plan] || PLAN_LABELS.starter
+
+  const filteredNav = NAV.filter(item => item.plans.includes(plan))
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -65,11 +105,16 @@ export default function Dashboard() {
               <div style={{ width: 5, height: 5, borderRadius: '50%', background: tenant.twilio_number ? 'var(--green)' : 'var(--platinum-6)' }} className={tenant.twilio_number ? 'dot-live' : ''} />
               <span style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{tenant.twilio_number ? 'Active' : 'Setup required'}</span>
             </div>
+            <div style={{ marginTop: 6 }}>
+              <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', padding: '2px 6px', borderRadius: 4, background: plan === 'founders' ? 'var(--green-dim)' : plan === 'pro' ? 'rgba(232,232,232,0.06)' : plan === 'partner' ? 'var(--amber-dim)' : 'var(--black-5)', color: planInfo.color, border: `1px solid ${plan === 'founders' ? 'rgba(74,222,128,0.15)' : plan === 'partner' ? 'rgba(251,191,36,0.15)' : 'var(--border)'}` }}>
+                {planInfo.label}
+              </span>
+            </div>
           </div>
         )}
 
         <nav style={{ flex: 1, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 1, overflowY: 'auto' }}>
-          {NAV.map(({ path, label, icon }) => (
+          {filteredNav.map(({ path, label, icon }) => (
             <NavLink key={path} to={`/dashboard${path ? `/${path}` : ''}`} end={path === ''}
               style={({ isActive }) => ({ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 10px', borderRadius: 7, fontSize: 12, fontWeight: isActive ? 500 : 400, color: isActive ? 'var(--text)' : 'var(--text-4)', background: isActive ? 'var(--accent-dim)' : 'transparent', border: isActive ? '1px solid var(--border-2)' : '1px solid transparent', transition: 'all 0.12s', textDecoration: 'none' })}
             >
@@ -82,6 +127,20 @@ export default function Dashboard() {
               )}
             </NavLink>
           ))}
+
+          {plan === 'starter' && (
+            <a href="/pricing" style={{
+              display: 'flex', alignItems: 'center', gap: 9, padding: '7px 10px', borderRadius: 7,
+              fontSize: 11, color: 'var(--amber)', background: 'var(--amber-dim)',
+              border: '1px solid rgba(251,191,36,0.15)', textDecoration: 'none',
+              marginTop: 8, letterSpacing: '0.02em',
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+              Upgrade Plan
+            </a>
+          )}
         </nav>
 
         <div style={{ padding: '12px 12px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -116,7 +175,11 @@ export default function Dashboard() {
           <Route index element={<Overview tenant={tenant} user={user} reload={reload} />} />
           <Route path="leads" element={<Leads tenant={tenant} />} />
           <Route path="calls" element={<Calls tenant={tenant} />} />
-          <Route path="appointments" element={<Appointments tenant={tenant} />} />
+          <Route path="appointments" element={
+            ['pro', 'founders', 'partner'].includes(plan)
+              ? <Appointments tenant={tenant} />
+              : <UpgradeGate plan={plan} />
+          } />
           <Route path="setup" element={<Setup tenant={tenant} reload={reload} />} />
           <Route path="settings" element={<Settings tenant={tenant} user={user} reload={reload} />} />
         </Routes>

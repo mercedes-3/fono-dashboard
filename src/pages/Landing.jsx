@@ -98,11 +98,11 @@ export default function Landing() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Link to="/auth" style={{ fontSize: 12, color: 'var(--text-3)', padding: '7px 14px', textDecoration: 'none' }}>Sign In</Link>
-          <a href="https://buy.stripe.com/aFadRb2FW8or63v7bc7ss04" style={{
+          <Link to="/pricing" style={{
             fontSize: 12, fontWeight: 500, padding: '8px 18px', borderRadius: 8,
             background: 'var(--platinum)', color: 'var(--black)',
             textDecoration: 'none', letterSpacing: '0.02em',
-          }}>Get Started</a>
+          }}>Get Started</Link>
         </div>
       </nav>
 
@@ -149,7 +149,7 @@ export default function Landing() {
           </p>
 
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="https://buy.stripe.com/aFadRb2FW8or63v7bc7ss04" style={{
+            <Link to="/pricing" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '12px 28px', borderRadius: 9, fontSize: 13, fontWeight: 500,
               background: 'var(--platinum)', color: 'var(--black)',
@@ -157,7 +157,7 @@ export default function Landing() {
               transition: 'opacity 0.15s',
             }}>
               Get Started
-            </a>
+            </Link>
             <a href="#demo" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '12px 28px', borderRadius: 9, fontSize: 13, fontWeight: 500,
@@ -280,7 +280,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Social proof placeholder */}
+      {/* Social proof */}
       <section style={{ padding: '20px 24px 80px', maxWidth: 560, margin: '0 auto', textAlign: 'center' }}>
         <div style={{
           padding: 'clamp(24px, 4vw, 36px)',
@@ -314,18 +314,18 @@ export default function Landing() {
           <p style={{ fontSize: 13, color: 'var(--text-4)', marginBottom: 32, lineHeight: 1.7 }}>
             Every missed call is a missed job. Fono makes sure that never happens again.
           </p>
-          <a href="https://buy.stripe.com/aFadRb2FW8or63v7bc7ss04" style={{
+          <Link to="/pricing" style={{
             display: 'inline-flex', alignItems: 'center',
             padding: '13px 32px', borderRadius: 9, fontSize: 13, fontWeight: 500,
             background: 'var(--platinum)', color: 'var(--black)',
             textDecoration: 'none', letterSpacing: '0.02em',
           }}>
             Get Started Today
-          </a>
+          </Link>
         </div>
       </section>
 
-     {/* Footer */}
+      {/* Footer */}
       <footer style={{
         borderTop: '1px solid var(--border)',
         padding: '40px 24px',
@@ -360,15 +360,15 @@ export default function Landing() {
                 <Link to="/terms" style={{ fontSize: 11, color: 'var(--text-4)', textDecoration: 'none' }}>Terms of Service</Link>
                 <Link to="/privacy" style={{ fontSize: 11, color: 'var(--text-4)', textDecoration: 'none' }}>Privacy Policy</Link>
                 <Link to="/refund" style={{ fontSize: 11, color: 'var(--text-4)', textDecoration: 'none' }}>Refund Policy</Link>
+                <Link to="/pricing" style={{ fontSize: 11, color: 'var(--text-4)', textDecoration: 'none' }}>Pricing</Link>
               </div>
             </div>
           </div>
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <p style={{ fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.04em' }}>© 2026 3ON3 LLC. All rights reserved.</p>
-            <a href="https://buy.stripe.com/aFadRb2FW8or63v7bc7ss04" style={{ fontSize: 10, color: 'var(--text-4)', textDecoration: 'none', letterSpacing: '0.04em' }}>Pricing</a>
           </div>
         </div>
       </footer>
-      </div>
+    </div>
   )
 }

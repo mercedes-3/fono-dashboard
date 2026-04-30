@@ -20,6 +20,25 @@ function ProtectedRoute({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
     return () => subscription.unsubscribe()
   }, [])
+
+  // Auto logout after 30 minutes of inactivity
+  useEffect(() => {
+    if (!session) return
+    let timeout
+    const resetTimer = () => {
+      clearTimeout(timeout)
+      timeout = setTimeout(() => {
+        supabase.auth.signOut()
+      }, 30 * 60 * 1000)
+    }
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart']
+    events.forEach(e => window.addEventListener(e, resetTimer))
+    resetTimer()
+    return () => {
+      clearTimeout(timeout)
+      events.forEach(e => window.removeEventListener(e, resetTimer))
+    }
+  }, [session])
   if (session === undefined) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--black)' }}>
       <div className="spinner" style={{ width: 20, height: 20 }} />

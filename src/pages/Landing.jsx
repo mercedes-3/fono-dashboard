@@ -325,6 +325,32 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* About */}
+      <section style={{ padding: '40px 24px 80px', maxWidth: 700, margin: '0 auto' }}>
+        <div style={{
+          background: 'var(--black-3)',
+          border: '1px solid var(--border)',
+          borderRadius: 14,
+          padding: 'clamp(28px, 5vw, 40px)',
+        }}>
+          <div style={{ fontSize: 9, color: 'var(--text-4)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>About</div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 300, color: 'var(--text)', marginBottom: 16 }}>Built by 3ON3 LLC</h2>
+          <p style={{ fontSize: 13, color: 'var(--text-4)', lineHeight: 1.8, marginBottom: 16 }}>
+            Fono is developed and operated by 3ON3 LLC, a technology company based in El Paso, Texas. We build AI-powered tools that help contractors run their businesses more efficiently. Our platform answers calls, qualifies leads, books appointments, and automates follow-ups so contractors never miss a job.
+          </p>
+          <p style={{ fontSize: 13, color: 'var(--text-4)', lineHeight: 1.8, marginBottom: 20 }}>
+            We are committed to protecting your data and privacy. All customer information is encrypted and stored securely. We comply with TCPA, GDPR, and CCPA regulations. For more details, see our Privacy Policy and Terms of Service.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-4)' }}>
+            <span><strong style={{ color: 'var(--text-3)' }}>Company:</strong> 3ON3 LLC</span>
+            <span><strong style={{ color: 'var(--text-3)' }}>Location:</strong> El Paso, TX</span>
+            <span><strong style={{ color: 'var(--text-3)' }}>Email:</strong> mercedes@3on3scalez.com</span>
+            <span><strong style={{ color: 'var(--text-3)' }}>Phone:</strong> (210) 672-0944</span>
+            <span><strong style={{ color: 'var(--text-3)' }}>Website:</strong> fonoreception.com</span>
+          </div>
+        </div>
+      </section>
+      
       {/* Footer */}
       <footer style={{
         borderTop: '1px solid var(--border)',

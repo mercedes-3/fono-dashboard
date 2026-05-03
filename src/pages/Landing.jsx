@@ -350,6 +350,28 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* SMS Consent */}
+      <section style={{ padding: '0 24px 80px', maxWidth: 700, margin: '0 auto' }}>
+        <div style={{
+          background: 'var(--black-3)',
+          border: '1px solid var(--border)',
+          borderRadius: 14,
+          padding: 'clamp(28px, 5vw, 40px)',
+        }}>
+          <div style={{ fontSize: 9, color: 'var(--text-4)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>SMS Disclosure</div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 300, color: 'var(--text)', marginBottom: 16 }}>Text Messaging Terms</h2>
+          <p style={{ fontSize: 12, color: 'var(--text-4)', lineHeight: 1.8, marginBottom: 12 }}>
+            By calling or texting a Fono-powered phone number, you consent to receive automated SMS messages related to your service request, including appointment confirmations, follow-ups, and service updates. Message frequency varies. Message and data rates may apply.
+          </p>
+          <p style={{ fontSize: 12, color: 'var(--text-4)', lineHeight: 1.8, marginBottom: 12 }}>
+            You can opt out at any time by replying <strong style={{ color: 'var(--text-3)' }}>STOP</strong> to any message. Reply <strong style={{ color: 'var(--text-3)' }}>HELP</strong> for support. For more information, see our <Link to="/privacy" style={{ color: 'var(--platinum)', textDecoration: 'underline' }}>Privacy Policy</Link> and <Link to="/terms" style={{ color: 'var(--platinum)', textDecoration: 'underline' }}>Terms of Service</Link>.
+          </p>
+          <p style={{ fontSize: 12, color: 'var(--text-4)', lineHeight: 1.8 }}>
+            Fono is operated by 3ON3 LLC, El Paso, TX. Contact: mercedes@3on3scalez.com | (210) 672-0944
+          </p>
+        </div>
+      </section>
       
       {/* Footer */}
       <footer style={{
